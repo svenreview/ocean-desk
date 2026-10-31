@@ -69,6 +69,14 @@
     {
       "source": "/world-v16",
       "destination": "/world-v16/index.html"
+    },
+    {
+      "source": "/world-v17",
+      "destination": "/world-v17/index.html"
+    },
+    {
+      "source": "/world-v18",
+      "destination": "/world-v18/index.html"
     }
   ]
 }
