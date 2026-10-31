@@ -101,6 +101,14 @@
     {
       "source": "/world-v24",
       "destination": "/world-v24/index.html"
+    },
+    {
+      "source": "/world-v25",
+      "destination": "/world-v25/index.html"
+    },
+    {
+      "source": "/world-v25-3d",
+      "destination": "/world-v25-3d/index.html"
     }
   ]
 }
