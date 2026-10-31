@@ -1,0 +1,243 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>OCEAN DESK — Coastal World v9</title><style>
+*{box-sizing:border-box}body{margin:0;background:#a5d7eb;color:#274451;font-family:system-ui,'Apple SD Gothic Neo',sans-serif}#app{width:100vw;height:100dvh;display:block}.head{position:fixed;top:22px;left:25px;color:#fff;text-shadow:0 2px 10px #18445a77;pointer-events:none}.head h1{font:38px Georgia,serif;margin:0;letter-spacing:.1em}.head small{letter-spacing:.22em}.menu{position:fixed;right:20px;top:20px;padding:17px;background:#fffef2ee;backdrop-filter:blur(15px);border:1px solid #ffffffac;border-radius:22px;box-shadow:0 16px 45px #28536a22;width:min(300px,calc(100vw - 30px))}.menu h2{font-size:15px;margin:0 0 10px}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:9px}.menu button,.bottom button{border:0;background:#e9f0e9;color:#2a505c;border-radius:10px;padding:11px 9px;font-size:12px;font-weight:700;cursor:pointer}.menu button:hover,.bottom button:hover{background:#c8e5e6}.sub{font-size:11px;color:#607e82;line-height:1.6;margin-top:10px}.bottom{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#fffdf2ef;backdrop-filter:blur(12px);display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:18px;box-shadow:0 10px 32px #19476730}.bottom strong{min-width:64px;text-align:center;font-variant-numeric:tabular-nums}.tag{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);border-radius:30px;background:#24495bd8;color:white;padding:8px 18px;font-size:12px;text-align:center}.note{position:fixed;bottom:12px;left:15px;font-size:10px;color:#fff;text-shadow:0 1px 5px #234}@media(max-width:680px){.head{top:12px;left:12px}.head h1{font-size:24px}.head small{font-size:8px}.menu{top:75px;right:9px;width:206px;padding:11px}.buttons{grid-template-columns:1fr}.menu button{padding:7px}.sub{display:none}.bottom{bottom:8px;gap:4px;padding:8px}.bottom button{padding:8px 6px;font-size:11px}.tag{bottom:69px;font-size:11px}.note{display:none}}</style></head><body>
+<canvas id="app"></canvas><div class="head"><h1>OCEAN DESK</h1><small>A PLACE TO RETURN</small></div>
+<div class="menu"><h2>바다 위의 공간을 선택하세요</h2><div class="buttons"><button data-go="plaza">🌊 해안 광장</button><button data-go="one">☕ 1관 산토리니</button><button data-go="two">📚 2관 스터디</button><button data-go="three">🌅 3관 선셋</button><button data-go="private">🪟 개인 집중실</button><button data-go="overview">🧭 전체 보기</button></div><div id="spotbar" style="margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:5px"></div><button id="lookmode" style="margin-top:8px;width:100%">🔒 정면 고정 · 둘러보기</button><div class="sub">실내 입장 후 마우스/손가락으로 둘러보기 · 광장 복귀 가능<br>이용자 실시간 접속은 추후 연결됩니다.</div></div>
+<div class="tag" id="tag">바다를 바라보는 해안 광장</div><div class="bottom"><button id="sound">🔇 파도 끔</button><button id="twenty">25분</button><button id="fifty">50분</button><strong id="clock">25:00</strong><button id="toggle">시작</button><button id="reset">↻</button></div><div class="note">3D WORLD v9 · 공간 디테일 시범 버전</div>
+<script type="module">
+import * as THREE from 'https://esm.sh/three@0.160.0';
+import {OrbitControls} from 'https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+const canvas=document.querySelector('#app'),scene=new THREE.Scene();scene.background=new THREE.Color('#a6d5ec');scene.fog=new THREE.FogExp2('#a6d5ec',.006);
+const camera=new THREE.PerspectiveCamera(54,innerWidth/innerHeight,.1,300);camera.position.set(0,10,30);
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;
+scene.add(new THREE.HemisphereLight('#ffffff','#6d8990',2.4));const sun=new THREE.DirectionalLight('#ffe7bd',2.15);sun.position.set(-22,36,20);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-50;sun.shadow.camera.right=50;sun.shadow.camera.top=50;sun.shadow.camera.bottom=-50;scene.add(sun);
+const controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*.48;controls.minDistance=3;controls.maxDistance=82;controls.target.set(0,2,-10);
+const m=c=>new THREE.MeshStandardMaterial({color:c,roughness:.8});const stucco=m('#f7f2e8'),ivory=m('#e8d8c1'),stone=m('#d3bea1'),wood=m('#a06d45'),dark=m('#553b2f'),green=m('#577a55'),pink=m('#c85e87'),blue=m('#397c9a'),amber=m('#c98965'),glass=new THREE.MeshStandardMaterial({color:'#b3dae1',roughness:.13,metalness:.15,transparent:true,opacity:.5});
+function obj(g,mat,x,y,z,parent=scene){const a=new THREE.Mesh(g,mat);a.position.set(x,y,z);a.castShadow=true;a.receiveShadow=true;parent.add(a);return a}
+function B(w,h,d,mat,x,y,z,p){return obj(new THREE.BoxGeometry(w,h,d),mat,x,y,z,p)}
+function C(r,h,mat,x,y,z,p){return obj(new THREE.CylinderGeometry(r,r,h,18),mat,x,y,z,p)}
+function S(r,mat,x,y,z,p){return obj(new THREE.SphereGeometry(r,12,10),mat,x,y,z,p)}
+// Sea horizon extends beneath cliff and across the full background.
+const seaGeo=new THREE.PlaneGeometry(380,280,40,24),seaMat=new THREE.MeshStandardMaterial({color:'#147cac',roughness:.25,metalness:.28,flatShading:true});const sea=obj(seaGeo,seaMat,0,-4.15,-103);sea.rotation.x=-Math.PI/2;const seaPos=seaGeo.attributes.position;const X=[],Y=[];for(let i=0;i<seaPos.count;i++){X[i]=seaPos.getX(i);Y[i]=seaPos.getY(i)}
+B(115,5,70,ivory,0,-4,9);B(112,.7,65,stone,0,-1.1,7);B(22,.35,24,stucco,-20,-.5,-11);B(22,.35,24,stucco,22,-.5,-11);B(16,.35,20,stucco,0,-.5,-34);B(19,.3,18,stucco,0,-.5,7);
+for(let i=0;i<9;i++)B(5,.1,.8,stucco,0,-.24,7+i*1.2);
+for(let i=0;i<12;i++){const xx=-13+i*2.4;B(1,.2,1.5,ivory,xx,-.3,19+Math.sin(i)*.3)}
+// Architectural arch: vertical pillars + softly curved ring.
+function arch(x,y,z,width=4,mat=stucco,parent=scene){B(.65,5,.7,mat,x-width/2,y+2.5,z,parent);B(.65,5,.7,mat,x+width/2,y+2.5,z,parent);const a=obj(new THREE.TorusGeometry(width/2,.38,9,28,Math.PI),mat,x,y+5,z,parent);a.rotation.z=Math.PI/2}
+function plant(x,z,scale=1,flower=false){C(.28*scale,.65*scale,ivory,x,.1,z);S(.7*scale,flower?pink:green,x,1.05*scale,z);if(!flower)S(.55*scale,green,x+.35,1.35*scale,z)}
+// 1. Bright Santorini Cafe: open-air, terraces, woven chairs
+// V8: furniture position is shared with the seat-camera presets below.
+const layout={"one":[[-7,-4.8],[-2.4,-4.8],[2.2,-4.8],[6.8,-4.8],[-6.5,2.7],[-2.1,2.7],[2.3,2.7],[6.7,2.7]],"two":[[-6.8,-4.4],[-2.3,-4.4],[2.2,-4.4],[6.7,-4.4],[-6.8,2.7],[-2.3,2.7],[2.2,2.7],[6.7,2.7]],"three":[[-6,-4.3],[-2,-4.3],[2,-4.3],[6,-4.3],[-6,3],[-2,3],[2,3],[6,3]]};
+// V9 material language: procedural canvas detail, no heavy downloads.
+function pattern(base,stroke,type){
+ const cn=document.createElement('canvas');cn.width=256;cn.height=256;const q=cn.getContext('2d');
+ q.fillStyle=base;q.fillRect(0,0,256,256);q.strokeStyle=stroke;q.lineWidth=2;
+ if(type==='wood'){for(let i=0;i<24;i++){let y=i*12+Math.sin(i*2)*3;q.beginPath();q.moveTo(0,y);q.bezierCurveTo(70,y+4,170,y-5,256,y+2);q.stroke()}}
+ if(type==='stone'){for(let i=0;i<6;i++){q.beginPath();q.moveTo(0,i*46);q.lineTo(256,i*46+12);q.stroke()}}
+ const tex=new THREE.CanvasTexture(cn);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(2,2);tex.colorSpace=THREE.SRGBColorSpace;return tex;
+}
+wood.map=pattern('#bb8b62','#99704b','wood');wood.needsUpdate=true;
+stone.map=pattern('#e3cfad','#d0b995','stone');stone.needsUpdate=true;
+const linenSeat=m('#eee0c8'),blueSeat=m('#809eab'),sandSeat=m('#e7bda5'),brass=m('#b48c50');
+function cushion(x,y,z,w,d,material,parent){const s=B(w,.14,d,material,x,y,z,parent);return s}
+function footMat(x,z,parent){B(1.45,.035,1.55,m('#e8dfd0'),x,.025,z,parent)}
+function furnitureDetails(room,g,x,z,i){
+ if(room==='one'){
+  cushion(x,.77,z+1.35,.96,.88,i%2?linenSeat:blueSeat,g);
+  B(.94,.12,.12,linenSeat,x,1.33,z+1.7,g);
+  C(.12,.045,brass,x+.47,1.16,z+.12,g);
+  if(i<4)footMat(x,z+1.25,g);
+ }else if(room==='two'){
+  cushion(x,.68,z+1.31,.98,.75,linenSeat,g);
+  B(.8,.12,.12,blueSeat,x,1.14,z+1.68,g);
+  B(.38,.015,.28,m('#e7ece9'),x-.35,1.335,z-.15,g);
+  B(.22,.22,.18,dark,x+.63,1.45,z+.3,g);
+ }else{
+  cushion(x,i<4?.77:.76,z+(i<4?0:1.25),1.32,.9,i<4?sandSeat:linenSeat,g);
+  B(1.25,.16,.17,linenSeat,x,1.34,z+(i<4?1.0:1.64),g);
+ }
+}
+function santorini(){
+ const g=new THREE.Group();scene.add(g);g.position.set(-22,0,-9);
+ B(20,.35,19,stucco,0,-.2,0,g);
+ B(20,4.2,.65,stucco,0,2.1,9,g);
+ for(let z of [2,8])for(let x of [-9.4,9.4])C(.21,6.3,stucco,x,3.15,z,g);
+ for(let z of [3,6,9])B(20,.24,.32,stucco,0,7.3,z,g);
+ layout.one.forEach(([x,z],i)=>{
+   C(i<4?.94:.78,.13,stucco,x,1.05,z,g);C(.12,.96,wood,x,.52,z,g);
+   B(1.05,.2,.92,wood,x,.57,z+1.35,g);B(1.05,.88,.13,wood,x,1.06,z+1.79,g);
+   C(.16,.12,ivory,x,1.23,z,g);furnitureDetails('one',g,x,z,i);
+ });
+ for(let i=0;i<4;i++)plant(-8+i*5,8.25,.72,i%2===0);
+ return g;
+}
+function study(){
+ const g=new THREE.Group();scene.add(g);g.position.set(23,0,-9);
+ B(20,.35,19,wood,0,-.18,0,g);B(20,5,.65,ivory,0,2.5,9,g);
+ for(let z of [2,8])for(let x of [-9.4,9.4])C(.2,8,ivory,x,4,z,g);
+ for(let z of [2,8])B(20,.28,.35,stone,0,9.15,z,g);
+ layout.two.forEach(([x,z],i)=>{
+   B(2.25,.17,1.25,wood,x,1.23,z,g);
+   for(let k of [-.86,.86])B(.11,1.15,.12,dark,x+k,.62,z-.38,g);
+   B(1.05,.18,.82,dark,x,.53,z+1.31,g);
+   C(.1,.44,stone,x+.63,1.53,z,g);S(.2,m('#ffe3a4'),x+.63,1.84,z,g);
+   if(i===0||i===3||i===4||i===7)B(.12,1.75,1.6,ivory,x+(i%4===0?-1.35:1.35),.88,z+.65,g);furnitureDetails('two',g,x,z,i);
+ });
+ for(let i=0;i<5;i++){let x=-8+i*4;B(2.6,5.6,.5,dark,x,3.12,8.2,g);for(let j=0;j<5;j++)B(2.2,.3,.2,m(['#587381','#a0805c','#465f59'][j%3]),x,1.1+j*.86,7.85,g)}
+ return g;
+}
+function sunset(){
+ const g=new THREE.Group();scene.add(g);g.position.set(0,0,-35);
+ B(18,.35,17,stone,0,-.15,0,g);
+ for(let x of [-8,8])for(let z of [-7,7])C(.26,5,wood,x,2.5,z,g);
+ B(19,.4,9,m('#ccaa8b'),0,5.25,4,g);
+ layout.three.forEach(([x,z],i)=>{
+   if(i<4){B(1.65,.32,1.38,amber,x,.55,z,g);B(1.65,1,.28,amber,x,1.08,z+1.02,g);B(.38,.32,.35,wood,x,.59,z-1.3,g)}
+   else{C(.55,.36,wood,x,.9,z,g);B(1,.18,.95,amber,x,.58,z+1.25,g);B(1,.78,.17,amber,x,1.07,z+1.69,g)}furnitureDetails('three',g,x,z,i);
+ });
+ for(let i=0;i<6;i++)S(.16,m('#ffda92'),-7+i*2.8,4.6,0,g);
+ return g;
+}
+santorini();study();sunset();
+// v2 architectural detailing, deliberately different silhouettes and material palettes.
+const plasterAccent=m('#e9e2d5'),terracotta=m('#c67c60'),linen=m('#dfc6a5'),teal=m('#68a6a8'),leafDark=m('#376b55');
+function rod(a,b,r,material){const d=new THREE.Vector3().subVectors(b,a);const o=obj(new THREE.CylinderGeometry(r,r,d.length(),10),material,0,0,0);o.position.copy(a).add(b).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());return o}
+function detailsSantorini(){
+  // Blue inset doors, tiled bands, asymmetrical courtyard and open seaside pergola.
+  B(6,.18,.15,teal,-22,6.5,-.35);B(8,.18,.15,teal,-22,7.05,-.35);
+  // Pergola beams intentionally omitted over the forward sea view.
+  for(let j=0;j<5;j++){const x=-30+j*4;B(1.4,.06,2.6,plasterAccent,x,.11,-.1);S(.39,pink,x,1.08,2.4);S(.26,green,x+.4,.83,2.1)}
+  // A signature dome at the back of the cafe.
+  const dome=obj(new THREE.SphereGeometry(4.4,24,14,0,Math.PI*2,0,Math.PI/2),stucco,-22,7.65,-3.5);dome.scale.set(1,.55,.8);
+  for(let i=0;i<4;i++){let x=-29+i*4.4;B(1.2,.08,.15,teal,x,7.18,-2)}
+}
+function detailsStudy(){
+  // Modern academic reading hall: strong structural rhythm and ribs beneath the ceiling.
+  for(let i=0;i<5;i++)B(.24,.32,12,dark,15+i*3.5,8.92,-4); // ceiling beams only
+  // Dramatic glass side wall looking toward the sea.
+  // Open sea-facing study deck: no glass curtain wall.
+  // No horizontal frame blocking the waterfront.
+  // Classic tall interior chandeliers.
+  for(let i=0;i<3;i++){let x=17+i*6;C(.075,1.7,dark,x,7.9,-11);S(.42,m('#fff0cc'),x,6.92,-11)}
+}
+function detailsSunset(){
+  // Pavilion with a warm terracotta roof and long open waterfront deck.
+  B(19,.23,9,terracotta,0,5.68,-30); // half-roof: leave sea half openB(22,.25,5,linen,0,.14,-25);
+  for(let i=0;i<7;i++){let x=-9+i*3;C(.7,.2,wood,x,.52,-24);B(1.4,.28,1.6,terracotta,x,.46,-22.5)}
+  // Slim architectural screens rather than walls, sunset-friendly openness.
+  // Forward-facing sunset opening has no decorative screen.
+  for(let i=0;i<10;i++)S(.19,m('#f8cf92'),-8+i*1.8,4.52,-29);
+}
+function improveSite(){
+  // Cliff garden edging and crafted stone balustrades.
+  for(let i=0;i<19;i++){let x=-48+i*5.2;B(.33,1.1,.33,stucco,x,.42,26);if(i<18)B(5,.12,.13,stucco,x+2.5,1.01,26)}
+  // Olive trees on sloping side terraces.
+  for(let i=0;i<9;i++){let x=-42+i*10,z=22+(i%3)*2;C(.16,2.6,dark,x,1.22,z);S(1.55,leafDark,x,3.06,z);S(1,green,x+1.1,2.75,z-.3)}
+  // White stepping stones guide the gaze toward the ocean.
+  for(let i=0;i<13;i++){let x=-7+i*1.15;B(.8,.08,1.4,plasterAccent,x,.08,12.5+Math.sin(i*.5)*.5)}
+}
+detailsSantorini();detailsStudy();detailsSunset();improveSite();
+
+
+
+// V7: calmer clear views from the seats: lower the foreground furniture scale visually.
+// A subtle horizontal offshore glow anchors the sightline without hiding the horizon.
+const horizonGlow=new THREE.MeshBasicMaterial({color:'#d4e8df',transparent:true,opacity:.18,side:THREE.DoubleSide});
+const glow=obj(new THREE.PlaneGeometry(160,2.4),horizonGlow,0,.25,-142);
+// V5 coastal life: islands give each sea-facing seat an orientation landmark.
+const islandRock=m('#758b82'),islandGrass=m('#658c5e'),birdMat=new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide});
+function island(x,z,r){const o=C(r,2,islandRock,x,-3.6,z);o.scale.z=.78;const h=C(r*.76,.8,islandGrass,x,-2.35,z);h.scale.z=.8;for(let i=0;i<5;i++)S(r*.18,green,x+(i-2)*r*.23,-1.85,z+(i%2)*.5)}
+island(-41,-82,7);island(50,-105,11);island(10,-122,4);
+const gulls=[];for(let i=0;i<4;i++){let g=new THREE.Group();scene.add(g);let left=B(.95,.045,.22,birdMat,-.45,0,0,g),right=B(.95,.045,.22,birdMat,.45,0,0,g);let body=S(.16,birdMat,0,0,0,g);g.position.set(-22+i*14,14+i*.7,-59-i*8);g.userData={left,right,offset:i*2.1};gulls.push(g)}
+// A small dolphin occasionally breaches far offshore; deliberately subtle.
+const dolphin=new THREE.Group();scene.add(dolphin);const dolphinMat=m('#879fa7');
+const torso=S(.72,dolphinMat,0,0,0,dolphin);torso.scale.set(1.8,.6,.55);
+const fin=obj(new THREE.ConeGeometry(.33,.8,3),dolphinMat,0,.57,0,dolphin);fin.rotation.z=.35;
+const tail=B(.85,.15,.3,dolphinMat,-1.45,-.1,0,dolphin);tail.rotation.z=.27;
+const birdsOn=document.createElement('button');birdsOn.textContent='🕊 자연 연출 켬';birdsOn.style.marginTop='7px';birdsOn.style.width='100%';document.querySelector('.menu').appendChild(birdsOn);
+let natureEnabled=true;birdsOn.onclick=()=>{natureEnabled=!natureEnabled;birdsOn.textContent=natureEnabled?'🕊 자연 연출 켬':'🕊 자연 연출 끔';gulls.forEach(g=>g.visible=natureEnabled);dolphin.visible=natureEnabled};
+function animateNature(now){
+ const t=now*.001;
+ for(const g of gulls){g.position.x=Math.sin(t*.09+g.userData.offset)*25;g.position.z=-68+Math.cos(t*.07+g.userData.offset)*12;g.userData.left.rotation.z=Math.sin(t*2.4+g.userData.offset)*.24;g.userData.right.rotation.z=-g.userData.left.rotation.z}
+ const phase=t%38;const leap=phase>31&&phase<34?Math.sin((phase-31)/3*Math.PI):0;
+ dolphin.visible=natureEnabled&&leap>.04;
+ dolphin.position.set(-5+phase*.7,-4.05+leap*2.8,-68);
+ dolphin.rotation.z=(phase-32.5)*.34;
+}
+// A tiny secluded private focus booth, not another 8-seat room.
+B(6,.3,5,stucco,37,-.1,11);B(6,3,.25,wood,37,1.5,13.5);B(.25,3,5,ivory,34,1.5,11);B(.25,3,5,ivory,40,1.5,11);B(3,.18,1.1,wood,37,1.15,11);B(1,.18,.9,dark,37,.58,12.1);
+// Central plaza garden with modest plinth, planted paths, and directional signpost
+C(2.8,.45,stucco,0,.1,1);C(2.1,.11,glass,0,.38,1);C(.22,2.1,ivory,0,1.35,1);S(.52,m('#ecd2a3'),0,2.63,1);
+for(let i=0;i<45;i++){let x=(Math.random()-.5)*88,z=(Math.random()-.5)*50+7;if(Math.abs(x)<8&&z<19)continue;if(Math.abs(x+22)<13&&z<5)continue;if(Math.abs(x-23)<13&&z<5)continue;plant(x,z,.45+Math.random()*.4,Math.random()<.36)}
+C(.18,4,wood,5,2.1,8);
+const destinationTargets=[];
+function sign(text,x,y,z,key){let c=document.createElement('canvas');c.width=512;c.height=128;let ctx=c.getContext('2d');ctx.fillStyle='#75543b';ctx.fillRect(0,0,512,128);ctx.fillStyle='#fdf6e6';ctx.font='bold 35px sans-serif';ctx.textAlign='center';ctx.fillText(text,256,80);let a=obj(new THREE.PlaneGeometry(3.8,.95),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),side:THREE.DoubleSide}),x,y,z);a.userData.go=key;destinationTargets.push(a)}
+sign('1관 산토리니 카페',5,3.4,8.3,'one');sign('2관 스터디 카페',5,2.45,8.3,'two');sign('3관 선셋 라운지',5,1.5,8.3,'three');
+// camera points: world plan distinct, closer view per theme
+// V4: predefined entrance and seat spots. All forward views face the sea (-Z).
+// Each room has an arrival spot and eight explicit seated viewpoints.
+const poses={
+ plaza:[[0,4.3,16],[0,2,-25]],
+ one:[[-22,2.3,-10],[-22,1.8,-40]],
+ two:[[23,2.3,-10],[23,1.8,-40]],
+ three:[[0,2.3,-33],[0,1.8,-65]],
+ private:[[37,1.9,11],[37,1.45,-30]],
+ overview:[[1,42,53],[0,0,-13]]
+};
+const titles={plaza:'해안가 중앙 광장',one:'1관 · 산토리니 카페 입구',two:'2관 · 오션뷰 스터디 카페 입구',three:'3관 · 선셋 라운지 입구',private:'나만의 개인 집중실',overview:'OCEAN DESK 전체 조감도'};
+const seatData={one:{x:-22,z:-9,spots:layout.one},two:{x:23,z:-9,spots:layout.two},three:{x:0,z:-35,spots:layout.three}};
+let currentRoom='plaza',seated=false,freeLook=false;
+let desiredCam=new THREE.Vector3(),desiredLook=new THREE.Vector3(),moving=false,moveStarted=0,moveDuration=850;
+const sourceCam=new THREE.Vector3(),sourceLook=new THREE.Vector3();
+const spotbar=document.querySelector('#spotbar'),lookmode=document.querySelector('#lookmode');
+const avatar=new THREE.Group();scene.add(avatar);const skin=m('#dcb395'),shirt=m('#4d7a8a'),pants=m('#5d6b77');
+C(.26,1.03,pants,0,.58,0,avatar);C(.36,.9,shirt,0,1.48,0,avatar);S(.28,skin,0,2.18,0,avatar);
+function showAvatar(k,seat){
+ const p=poses[k];avatar.visible=!seat&&k!=='overview';
+ if(avatar.visible){avatar.position.set(p[0][0]-1.2,-.15,p[0][2]-.5);avatar.rotation.y=Math.PI;}
+}
+function setCameraSpot(position,look,label,seat=false){
+ sourceCam.copy(camera.position);sourceLook.copy(controls.target);
+ desiredCam.set(...position);desiredLook.set(...look);
+ moveStarted=performance.now();moving=true;controls.enabled=false;
+ seated=seat;freeLook=false;lookmode.textContent='🔒 정면 고정 · 둘러보기';
+ document.querySelector('#tag').textContent=label;
+ showAvatar(currentRoom,seat);
+}
+function seatSpot(k,index){
+ if(!seatData[k]||index<0||index>7)return;
+ currentRoom=k;
+ const d=seatData[k],x=d.x+d.spots[index][0],z=d.z+d.spots[index][1];
+ // Fixed calm seated camera: face the open sea (-Z), away from the back wall.
+ // Different seating angles reveal a different offshore landmark without any camera sway.
+ const angle=[-.11,-.035,.035,.11,-.14,-.045,.045,.14][index];
+ const horizonX=x+Math.sin(angle)*45;
+ const horizonZ=z-45;
+ setCameraSpot([x,1.76,z+1.48],[horizonX,1.75,horizonZ],titles[k]+' · '+(index+1)+'번 좌석 · '+(['섬 전망','바다 정면','바다 정면','해안 전망','섬 전망','바다 정면','바다 정면','해안 전망'][index]),true);
+}
+function updateSeats(k){
+ spotbar.replaceChildren();
+ if(!seatData[k]){spotbar.style.display='none';return}
+ spotbar.style.display='grid';
+ for(let i=0;i<8;i++){const btn=document.createElement('button');btn.textContent=(i+1)+'번';btn.style.padding='7px 2px';btn.style.fontSize='11px';btn.onclick=()=>seatSpot(k,i);spotbar.appendChild(btn)}
+}
+function go(k){
+ if(!poses[k])return;
+ currentRoom=k;updateSeats(k);
+ setCameraSpot(poses[k][0],poses[k][1],titles[k],false);
+ document.querySelectorAll('[data-go]').forEach(b=>b.style.background=b.dataset.go===k?'#b6dbd8':'');
+}
+lookmode.onclick=()=>{if(moving)return;freeLook=!freeLook;controls.enabled=freeLook;lookmode.textContent=freeLook?'👁 자유 시점 · 정면으로 복귀':'🔒 정면 고정 · 둘러보기';if(!freeLook){setCameraSpot(desiredCam.toArray(),desiredLook.toArray(),document.querySelector('#tag').textContent,seated)}};
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+go('plaza');
+const ray=new THREE.Raycaster();canvas.addEventListener('click',e=>{const rect=canvas.getBoundingClientRect(),p=new THREE.Vector2((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(p,camera);let h=ray.intersectObjects(destinationTargets);if(h.length)go(h[0].object.userData.go)});
+let actx,noise,gain,isOn=false;document.querySelector('#sound').onclick=async()=>{if(!actx){actx=new AudioContext();const buffer=actx.createBuffer(1,actx.sampleRate*2,actx.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=Math.random()*2-1;noise=actx.createBufferSource();noise.buffer=buffer;noise.loop=true;const low=actx.createBiquadFilter();low.type='lowpass';low.frequency.value=280;gain=actx.createGain();gain.gain.value=0;noise.connect(low).connect(gain).connect(actx.destination);noise.start()}await actx.resume();isOn=!isOn;gain.gain.setTargetAtTime(isOn?.12:0,actx.currentTime,.4);document.querySelector('#sound').textContent=isOn?'🌊 파도 켬':'🔇 파도 끔'};
+let seconds=1500,initial=1500,running=false,last=performance.now();function show(){document.querySelector('#clock').textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(Math.floor(seconds%60)).padStart(2,'0')}document.querySelector('#twenty').onclick=()=>{seconds=initial=1500;running=false;show()};document.querySelector('#fifty').onclick=()=>{seconds=initial=3000;running=false;show()};document.querySelector('#toggle').onclick=()=>{running=!running;document.querySelector('#toggle').textContent=running?'정지':'시작'};document.querySelector('#reset').onclick=()=>{running=false;seconds=initial;show();document.querySelector('#toggle').textContent='시작'};
+function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}addEventListener('resize',resize);
+function frame(now){requestAnimationFrame(frame);const dt=Math.min(.1,(now-last)/1000);last=now;if(running){seconds=Math.max(0,seconds-dt);if(seconds===0)running=false;show()}for(let i=0;i<seaPos.count;i++)seaPos.setZ(i,.22*Math.sin(X[i]*.13+now*.0006)+.09*Math.cos(Y[i]*.18+now*.0008));seaPos.needsUpdate=true;if(moving){
+ const t=Math.min(1,(now-moveStarted)/moveDuration),e=t*t*(3-2*t);
+ camera.position.copy(sourceCam).lerp(desiredCam,e);
+ controls.target.copy(sourceLook).lerp(desiredLook,e);
+ if(t>=1){moving=false;controls.enabled=freeLook;}
+ }
+ animateNature(now);controls.update();renderer.render(scene,camera)}requestAnimationFrame(frame);
+</script></body></html>
