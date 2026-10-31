@@ -188,6 +188,7 @@ setInterval(()=>{timerRender();const d=new Date();$('clockLabel').textContent=d.
 </script>
 
 <style>
+.ocean-focus-presets{display:flex;gap:7px;padding:1px 10px 6px}.ocean-focus-presets button{flex:1;border:1px solid #c6dce2;background:#f4f8fa;border-radius:10px;padding:10px 4px;font-weight:750;color:#254d63;cursor:pointer}.ocean-focus-presets button.chosen{background:#bfdfee;border-color:#70b5d1}.ocean-focus-presets button:focus-visible,#viewWaves:focus-visible{outline:3px solid #259ac0;outline-offset:2px}#viewMusic[disabled]{opacity:.48;cursor:not-allowed}
 #oceanOverlay{position:fixed;inset:0;z-index:1000;background:#83c9e2;display:none}#oceanOverlay.active{display:block}
 #oceanGL{width:100%;height:100%;display:block}
 #oceanOverlay:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:linear-gradient(180deg,rgba(75,154,192,.15),transparent 32%,transparent 72%,rgba(28,66,84,.15));}
@@ -207,6 +208,10 @@ setInterval(()=>{timerRender();const d=new Date();$('clockLabel').textContent=d.
   <button id="viewScene" type="button" class="chosen"><span class="side-ico">≋</span> 풍경 보기</button>
   <button id="viewRead" type="button"><span class="side-ico">▤</span> 독서</button>
   <button id="viewFocus" type="button"><span class="side-ico">◎</span> 집중</button>
+  <div class="ocean-focus-presets" aria-label="집중 시간 선택"><button type="button" id="focus25" class="chosen">25분</button><button type="button" id="focus50">50분</button></div>
+  <button id="viewPause" type="button"><span class="side-ico">Ⅱ</span> 타이머 일시정지</button>
+  <button id="viewWaves" type="button" aria-pressed="false"><span class="side-ico">≋</span> 파도소리 켜기</button>
+  <button id="viewMusic" type="button" disabled title="추후 지원 예정"><span class="side-ico">♫</span> 음악 (준비 중)</button>
   <button id="returnCafeBottom" type="button"><span class="side-ico">↗</span> 일어나기</button>
   <div class="side-hint" id="viewModeHint">눈앞에 펼쳐지는 산토리니의 바다</div>
 </aside>
@@ -356,7 +361,21 @@ document.getElementById('viewAvatar').onclick=()=>setOceanMode('avatar');
 document.getElementById('viewScene').onclick=()=>setOceanMode('scenery');
 document.getElementById('viewRead').onclick=()=>{setOceanMode('reading');world.act('read')};
 document.getElementById('viewFocus').onclick=()=>{setOceanMode('focus');world.act('idle');if(!state.running){document.getElementById('timerStart').click()}};
-setInterval(()=>{if(oceanState.view!=='focus')return;const source=document.getElementById('timerDisplay')||document.getElementById('timer');const target=document.getElementById('oceanFocusClock');if(source&&target){let txt=source.textContent.trim();if(/\d{1,2}:\d{2}/.test(txt))target.textContent=txt.match(/\d{1,2}:\d{2}/)[0]}},500);
+function syncOceanFocus(){
+ const target=document.getElementById('oceanFocusClock');
+ target.textContent=document.getElementById('timerText').textContent;
+ document.getElementById('focus25').classList.toggle('chosen',state.timerMin===25);
+ document.getElementById('focus50').classList.toggle('chosen',state.timerMin===50);
+ document.getElementById('viewPause').innerHTML=state.running?'<span class="side-ico">Ⅱ</span> 일시정지':'<span class="side-ico">▷</span> 집중 이어하기';
+ const wave=document.getElementById('viewWaves');wave.setAttribute('aria-pressed',String(state.audioOn));wave.innerHTML='<span class="side-ico">≋</span> 파도소리 '+(state.audioOn?'끄기':'켜기');
+}
+for(const min of [25,50])document.getElementById('focus'+min).addEventListener('click',()=>{
+ document.querySelector('[data-min="'+min+'"]').click();
+ syncOceanFocus();
+});
+document.getElementById('viewPause').onclick=()=>{document.getElementById('timerStart').click();syncOceanFocus()};
+document.getElementById('viewWaves').onclick=()=>{document.getElementById('soundToggle').click();syncOceanFocus()};
+setInterval(syncOceanFocus,500);syncOceanFocus();
 // The 3D canvas supports dragging horizontally to turn your head.
 let dragOcean=null;
 const oceanCanvas=document.getElementById('oceanGL');
