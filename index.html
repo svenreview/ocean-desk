@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OCEAN DESK · 3D 집중 공간</title><meta name="description" content="바다 전망 3D 카페와 공부방에서 집중하는 OCEAN DESK 시범 서비스">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#eaf7ff;color:#193950}header{position:absolute;z-index:2;top:15px;left:15px;background:#ffffffeb;padding:16px 20px;border-radius:18px;box-shadow:0 8px 20px #24456822}h1{margin:0;font-size:23px}header small{color:#5e7480}nav{position:absolute;z-index:2;right:15px;top:15px;background:#ffffffed;padding:13px;border-radius:18px;display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:310px}button{border:0;border-radius:10px;background:#d9ecff;padding:11px;color:#194467;font-weight:700;cursor:pointer}button:hover{background:#add7ff}#view{width:100vw;height:100dvh;display:block}#panel{position:absolute;z-index:2;bottom:15px;left:15px;right:15px;display:flex;gap:12px;align-items:center;justify-content:space-between;background:#ffffffea;padding:12px 16px;border-radius:16px;flex-wrap:wrap}#timer{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}#notice{font-size:12px;color:#567}@media(max-width:600px){header{top:8px;left:8px;padding:10px}h1{font-size:17px}nav{top:82px;left:8px;right:auto;max-width:270px}#panel{font-size:13px;bottom:8px;left:8px;right:8px}}
+</style></head><body>
+<header><h1>🌊 OCEAN DESK</h1><small>3D Cafe · Study Room · Preview</small></header>
+<nav><button id="cafe">☕ 카페 8석</button><button id="study">📚 공부방 8석</button><button id="all">전체 보기</button><button id="home">아바타 원위치</button></nav>
+<canvas id="view"></canvas>
+<div id="panel"><div><b id="status">카페에서 시작하기</b><div id="notice">좌석을 선택하면 아바타가 이동합니다 · 이 화면은 로컬 시범판입니다</div></div><div><button data-min="25">25분</button> <button data-min="50">50분</button> <button id="start">시작/정지</button> <button id="reset">초기화</button></div><strong id="timer">25:00</strong></div>
+<script type="module">
+import * as THREE from 'https://esm.sh/three@0.160.0';
+import {OrbitControls} from 'https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+const canvas=document.querySelector('#view'),renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#aad9f5');const cam=new THREE.PerspectiveCamera(55,1,.1,150);
+const ctl=new OrbitControls(cam,canvas);ctl.enableDamping=true;ctl.maxPolarAngle=Math.PI*.47;ctl.target.set(1,0,0);
+scene.add(new THREE.HemisphereLight(0xffffff,0x7ea6bb,2));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(-8,20,14);sun.castShadow=true;scene.add(sun);
+const material=c=>new THREE.MeshStandardMaterial({color:c,roughness:.78});
+function cube(x,y,z,w,h,d,c){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material(c));o.position.set(x,y,z);o.receiveShadow=true;o.castShadow=true;scene.add(o);return o}
+cube(0,-.4,0,52,.6,35,'#eddcc1');cube(-20,-.32,-9,12,.5,44,'#2f94c2');
+const seats=[];function room(type,x){cube(x,0,0,14,.5,12,'#f5f2eb');cube(x-7,2.5,0,.5,5,12,'#ffffff');cube(x+7,2.5,0,.5,5,12,'#ffffff');cube(x,2.5,-6,14,5,.5,'#ffffff');
+for(let i=0;i<8;i++){const col=i%4,row=Math.floor(i/4),px=x-4.4+col*2.9,pz=-2.6+row*4.7;
+cube(px,.8,pz,1.45,.18,.92,type==='cafe'?'#d9b992':'#9caebf');
+cube(px,.42,pz-.35,.1,.7,.1,'#8b979b');cube(px,.42,pz+.35,.1,.7,.1,'#8b979b');
+const seat=cube(px,.4,pz+1,1,.27,.8,type==='cafe'?'#6fadd9':'#657d98');seat.userData={seat:type+'-'+(i+1),pos:new THREE.Vector3(px,.25,pz+1)};seats.push(seat);
+cube(px,.83,pz+1.43,1,.9,.14,type==='cafe'?'#6fadd9':'#657d98');
+}}
+room('cafe',-8);room('study',10);
+const avatar=new THREE.Group();const body=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.85,6,12),material('#f8a96b'));body.position.y=.85;avatar.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.28,16,12),material('#ffe2c2'));head.position.y=1.65;avatar.add(head);avatar.position.set(-8,.25,4);scene.add(avatar);
+let goal=null;const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();canvas.addEventListener('click',e=>{const rect=canvas.getBoundingClientRect();mouse.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(mouse,cam);const hits=ray.intersectObjects(seats);if(hits.length){const a=hits[0].object.userData;goal=a.pos;document.querySelector('#status').textContent='선택한 좌석: '+a.seat}});
+function view(p,t){cam.position.set(...p);ctl.target.set(...t);ctl.update()}view([-8,14,20],[-8,0,0]);
+document.querySelector('#cafe').onclick=()=>view([-8,14,20],[-8,0,0]);
+document.querySelector('#study').onclick=()=>view([10,14,20],[10,0,0]);
+document.querySelector('#all').onclick=()=>view([2,27,39],[1,0,0]);
+document.querySelector('#home').onclick=()=>{avatar.position.set(-8,.25,4);goal=null;document.querySelector('#status').textContent='아바타 원위치'};
+let remaining=25*60,base=25*60,running=false,last=performance.now();const el=document.querySelector('#timer');
+function timerText(){el.textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(Math.floor(remaining%60)).padStart(2,'0')}
+document.querySelectorAll('[data-min]').forEach(b=>b.onclick=()=>{base=Number(b.dataset.min)*60;remaining=base;running=false;timerText()});
+document.querySelector('#start').onclick=()=>{running=!running;last=performance.now()};
+document.querySelector('#reset').onclick=()=>{running=false;remaining=base;timerText()};
+function render(now){requestAnimationFrame(render);let dt=Math.min((now-last)/1000,.15);last=now;if(running){remaining=Math.max(0,remaining-dt);if(!remaining)running=false;timerText()}if(goal){const d=goal.clone().sub(avatar.position);d.y=0;if(d.length()<.08){goal=null}else avatar.position.addScaledVector(d.normalize(),Math.min(d.length(),dt*5))}ctl.update();renderer.render(scene,cam)}
+function resize(){const w=innerWidth,h=innerHeight;cam.aspect=w/h;cam.updateProjectionMatrix();renderer.setSize(w,h)}addEventListener('resize',resize);resize();requestAnimationFrame(render);
+</script></body></html>
