@@ -93,6 +93,10 @@
     {
       "source": "/world-v22",
       "destination": "/world-v22/index.html"
+    },
+    {
+      "source": "/world-v23",
+      "destination": "/world-v23/index.html"
     }
   ]
 }
