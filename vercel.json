@@ -129,6 +129,10 @@
     {
       "source": "/world-v28",
       "destination": "/world-v28/index.html"
+    },
+    {
+      "source": "/world-v29",
+      "destination": "/world-v29/index.html"
     }
   ]
 }
