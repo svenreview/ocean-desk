@@ -117,6 +117,14 @@
     {
       "source": "/world-v26-3d",
       "destination": "/world-v26-3d/index.html"
+    },
+    {
+      "source": "/world-v27",
+      "destination": "/world-v27/index.html"
+    },
+    {
+      "source": "/world-v27-3d",
+      "destination": "/world-v27-3d/index.html"
     }
   ]
 }
