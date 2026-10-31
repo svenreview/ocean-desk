@@ -61,6 +61,10 @@
     {
       "source": "/world-v14",
       "destination": "/world-v14/index.html"
+    },
+    {
+      "source": "/world-v15",
+      "destination": "/world-v15/index.html"
     }
   ]
 }
