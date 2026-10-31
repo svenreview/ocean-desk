@@ -156,7 +156,7 @@ let toastTimeout=null;
 const toast=message=>{let el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el.classList.remove('show'),3200)};
 const world=new OceanWorld($('worldCanvas'),{
   onSeatClick(id){if(!state.entered){toast('먼저 산토리니에 입장해 주세요.');return} if(state.seat===id){toast('이미 선택하신 자리입니다.');return}state.seat=id;hybridSeatPending=id;world.sit(id);$('worldHint').textContent=`${id} 좌석 이용 중`;$('seatCount').textContent='1/12';toast(`${id} 좌석으로 이동합니다.`)},
-  onFloorClick({x,y}){if(!state.entered){toast('먼저 입장해 주세요.');return} if(state.seat){state.seat=null;$('worldHint').textContent='자유롭게 둘러보는 중';$('seatCount').textContent='0/12'}world.seat=null;world.moveTo(x,y)}
+  onFloorClick({x,y}){if(!state.entered){toast('먼저 입장해 주세요.');return} if(state.seat){state.seat=null;hybridSeatPending=null;$('worldHint').textContent='자유롭게 둘러보는 중';$('seatCount').textContent='0/12'}world.seat=null;world.moveTo(x,y)}
 });
 function setMode(mode){state.mode=mode;world.setPlayer({mode});document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));$('profileSub').textContent=mode==='focus'?'조용히 집중하는 중':'바다를 보며 쉬는 중'}
 function enter(){const nick=$('nickname').value.trim();if(nick.length<2||nick.length>12){$('joinError').textContent='닉네임은 2~12자로 입력해 주세요.';return}if(/[<>\\]/.test(nick)){$('joinError').textContent='사용할 수 없는 문자가 포함되어 있습니다.';return}state.entered=true;state.nickname=nick;world.setPlayer({nickname:nick,avatar:state.avatar});$('profileName').textContent=nick;$('portrait').textContent=['🌺','🌊','📖','🌿'][state.avatar];$('portrait').style.background=['#fbeae4','#e7f0f9','#f3eaf8','#e4f5ee'][state.avatar];$('joinOverlay').classList.add('hidden');$('worldHint').textContent='빈 의자나 바닥을 눌러보세요';setMode(state.mode);toast(`${nick}님, 산토리니에 오신 것을 환영합니다!`)}
@@ -190,11 +190,11 @@ const hybridOverlay=document.getElementById('hybrid3d');
 const hybridFrame=document.getElementById('ocean3d');
 let hybridSeatPending=null,hybridOpening=false;
 function openSeated3D(id){
- if(hybridOpening||!state.entered||!state.seat||!world.player.sitting)return;
+ if(hybridOpening||!state.entered||state.seat!==id||world.seat!==id||!world.player.sitting||world.player.moving)return;
  hybridOpening=true;
  const idx=SEATS.findIndex(s=>s.id===id);
  const room=SEATS[idx]?.kind==='study'?'two':'one';
- const seat=idx<0?0:idx%8;
+ const seat=idx<0?0:idx%6;
  hybridOverlay.classList.add('active');
  hybridFrame.src='/world-v25-3d?room='+room+'&seat='+seat;
 }
@@ -206,7 +206,7 @@ function returnToOriginal2D(){
 document.getElementById('return2d').addEventListener('click',returnToOriginal2D);
 window.addEventListener('message',e=>{if(e.origin===location.origin&&e.data?.type==='ocean-desk-stand')returnToOriginal2D()});
 function hybridSeatWatcher(){
- if(hybridSeatPending&&world.player.sitting&&!world.player.moving){
+ if(hybridSeatPending&&world.player.sitting&&!world.player.moving&&world.seat===hybridSeatPending){
   const seat=hybridSeatPending;hybridSeatPending=null;openSeated3D(seat);
  }
  requestAnimationFrame(hybridSeatWatcher);
