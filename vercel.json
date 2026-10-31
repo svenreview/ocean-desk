@@ -1,4 +1,26 @@
 {
   "version": 2,
-  "cleanUrls": true
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/concept",
+      "destination": "/concept/index.html"
+    },
+    {
+      "source": "/world",
+      "destination": "/world/index.html"
+    },
+    {
+      "source": "/world-v2",
+      "destination": "/world-v2/index.html"
+    },
+    {
+      "source": "/world-v3",
+      "destination": "/world-v3/index.html"
+    },
+    {
+      "source": "/world-v4",
+      "destination": "/world-v4/index.html"
+    }
+  ]
 }
