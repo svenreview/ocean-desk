@@ -125,6 +125,10 @@
     {
       "source": "/world-v27-3d",
       "destination": "/world-v27-3d/index.html"
+    },
+    {
+      "source": "/world-v28",
+      "destination": "/world-v28/index.html"
     }
   ]
 }
