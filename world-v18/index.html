@@ -327,7 +327,7 @@ function animateAvatar(now){
     cameraChasing=false;avatarAtRoom(mo.k);
     setCameraSpot(poses[mo.k][0],poses[mo.k][1],titles[mo.k]+' · 입구 도착',false);
   }else{
-    cameraChasing=false;avatar.rotation.y=Math.PI;
+    cameraChasing=false;avatar.rotation.y=0; // Avatar face is modeled toward -Z (the sea); chair backs are at +Z.
     seatAnimation={start:now,duration:760,mode:'sit',k:mo.k,index:mo.index,x:mo.x,z:mo.z};
     document.querySelector('#tag').textContent='의자에 앉는 중...';
   }
