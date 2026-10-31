@@ -37,6 +37,10 @@
     {
       "source": "/world-v8",
       "destination": "/world-v8/index.html"
+    },
+    {
+      "source": "/world-v9",
+      "destination": "/world-v9/index.html"
     }
   ]
 }
