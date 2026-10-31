@@ -197,7 +197,7 @@ function openSeated3D(id){
  const room=SEATS[idx]?.kind==='study'?'two':'one';
  const seat=idx<0?0:idx%6; // six seats per original 2D room; mapped to 3D seats 1–6
  hybridOverlay.classList.add('active');
- hybridFrame.srcdoc=embeddedOcean3D.replace('location.search)',"('?'+'room='+room+'&seat='+seat))");
+ hybridFrame.srcdoc=embeddedOcean3D.replace('location.search)',JSON.stringify('?room='+room+'&seat='+seat)+')');
 }
 function returnToOriginal2D(){
  hybridOverlay.classList.remove('active');hybridFrame.removeAttribute('srcdoc');
