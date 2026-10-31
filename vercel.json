@@ -45,6 +45,10 @@
     {
       "source": "/world-v10",
       "destination": "/world-v10/index.html"
+    },
+    {
+      "source": "/world-v11",
+      "destination": "/world-v11/index.html"
     }
   ]
 }
