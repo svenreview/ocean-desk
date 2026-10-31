@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#102d3b" />
+  <meta name="description" content="바다 앞에서 함께 집중하는 공간, OCEAN DESK. 산토리니에서 공부하고 쉬어보세요." />
+  <title>OCEAN DESK | 세계의 바다 앞, 나만의 자리</title>
+  <style>
+:root{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:#213642;background:#f5f7f4;font-synthesis:none}*{box-sizing:border-box}body{margin:0;min-width:310px}button,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.shell{max-width:1590px;margin:0 auto;padding:0 43px}.site-header{height:91px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #dae4e2}.brand-mark{display:flex;gap:13px;align-items:center}.brand-wave{font-family:Georgia,serif;color:#1b7984;border:1.8px solid #2b8991;display:grid;place-items:center;width:43px;height:43px;border-radius:50%;font-size:31px;line-height:1;padding-bottom:9px}.brand-copy{display:flex;flex-direction:column;gap:3px}.brand-copy strong{letter-spacing:.12em;font-size:21px;font-weight:900;color:#0f3444}.brand-copy i{font-style:normal;font-weight:400}.brand-copy small{font-size:8px;letter-spacing:.24em;color:#748b91;font-weight:700}.header-right{display:flex;align-items:center;gap:13px;color:#5f7780;font-size:12px;font-weight:600}.beta{border:1px solid #c4d6d7;border-radius:50px;padding:6px 11px;letter-spacing:.08em;font-size:10px;color:#2b7b82}.top-dot{height:6px;width:6px;background:#7da79a;border-radius:50%}.icon-pill{border:1px solid #d2dcda;border-radius:50%;width:28px;height:28px;background:transparent;color:#67828a;font-size:12px}.main-layout{display:grid;grid-template-columns:minmax(0,1fr) 312px;gap:30px;padding-top:34px}.stage-overline,.sidebar-head{display:flex;justify-content:space-between;align-items:center}.eyebrow{letter-spacing:.2em;color:#658890;font-size:10px;font-weight:900}.tiny-caption{font-size:10px;letter-spacing:.12em;color:#a6b6ba}.heading-row{display:flex;justify-content:space-between;align-items:center;margin-top:26px;margin-bottom:24px}.location{font-size:11px;color:#249197;letter-spacing:.21em;font-weight:900;margin:0 0 13px}.pulse{display:inline-block;background:#63b5ad;border-radius:50%;width:7px;height:7px;margin-right:4px;box-shadow:0 0 0 3px #dbefea}h1{font-size:clamp(28px,3vw,42px);letter-spacing:-.065em;line-height:1.32;margin:0;color:#173745;font-weight:900}h1 em{color:#27818d;font-style:normal}.subtitle{color:#779096;font-size:13px;margin:12px 0 0;line-height:1.6}.location-seal{border:1px solid #cbdedb;color:#73949a;width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:9px;letter-spacing:.12em;line-height:1.6;flex-direction:column;transform:rotate(7deg);font-weight:700}.location-seal b{font-size:25px;font-family:Georgia,serif;font-weight:400;line-height:1.1;color:#3e8e95}.world-frame{border:1px solid #d8e3e2;background:white;border-radius:18px;overflow:hidden;box-shadow:0 12px 35px rgba(29,73,79,.07);position:relative}.world-toolbar{height:56px;padding:0 20px;display:flex;justify-content:space-between;align-items:center}.world-label{display:flex;align-items:center;gap:10px;color:#93a7ad;font-size:12px}.world-label strong{color:#355a64;font-size:13px}.little-sun{color:#e7b271;font-size:24px;line-height:0}.sep{color:#ccdbdd}.world-count{background:#eff7f5;border-radius:20px;padding:8px 11px;color:#628b8e;font-size:11px}.world-count span{font-weight:800;color:#237882}.canvas-holder{position:relative;overflow:hidden;background:#7fb4c6}#worldCanvas{display:block;width:100%;height:auto;aspect-ratio:12/7;touch-action:manipulation;cursor:crosshair}.canvas-tip{position:absolute;top:15px;left:16px;border-radius:30px;background:#f9fcf9ed;box-shadow:0 5px 16px #1d485420;padding:8px 13px;font-size:11px;color:#53747c;pointer-events:none}.world-bottom{min-height:55px;padding:12px 19px;display:flex;align-items:center;justify-content:space-between;gap:10px}.world-zones{display:flex;gap:9px}.zone-pill{border-radius:30px;background:#f5f7f6;color:#6e858c;padding:8px 10px;font-size:11px}.zone-pill b{color:#54787c;margin-left:6px}.z-icon{color:#38919a}.world-hint{font-size:11px;color:#9bacb0}.stage-footnote{font-size:11px;color:#9aadb0;margin:13px 2px}.stage-footnote span{color:#e5b885}.sidebar{padding-top:3px}.sidebar-head{margin-bottom:17px}.local-time{font-size:12px;color:#7e9ca3;letter-spacing:.09em;font-weight:800}.panel{border-radius:14px;background:#fff;border:1px solid #e1eae8;box-shadow:0 4px 16px #31586106;padding:20px;margin-bottom:13px}.person-panel{padding:17px 19px}.person-top{display:flex;align-items:center;gap:12px}.person-portrait{width:54px;height:54px;background:#e4f1ed;border-radius:14px;display:grid;place-items:center;font-size:28px}.overline{font-size:10px;letter-spacing:.1em;color:#9cb1b3;font-weight:700}.person-top h3{font-size:17px;margin:6px 0 2px;color:#234553}.person-top p{font-size:11px;color:#9aaeb2;margin:0}.status-chips{display:flex;gap:7px;margin-top:15px}.status-chip{flex:1;background:#f4f7f5;border:1px solid transparent;color:#81969b;font-size:12px;border-radius:8px;height:35px}.status-chip.active{border-color:#93c6c5;background:#eaf7f4;color:#287982;font-weight:800}.panel-title{display:flex;justify-content:space-between;align-items:flex-start}.panel-title h3{font-size:16px;letter-spacing:-.02em;color:#2c4854;margin:7px 0 0}.panel-mark{font-size:28px;color:#c2d7d7}.timer-panel{padding:21px 20px 18px}.timer-number{text-align:center;font-variant-numeric:tabular-nums;font-size:50px;letter-spacing:-.075em;font-weight:600;color:#154557;margin-top:22px;line-height:1.25}.timer-description{text-align:center;font-size:11px;color:#9baeb1;margin:5px 0 22px}.timer-presets{display:flex;background:#f4f7f6;border-radius:9px;gap:5px;padding:5px}.preset{border:0;background:transparent;flex:1;padding:10px 0;font-size:11px;color:#8ca0a5;border-radius:6px}.preset.active{background:#fff;color:#286c78;font-weight:800;box-shadow:0 1px 5px #21495317}.timer-actions{display:flex;gap:8px;margin-top:13px}.primary-btn{border:0;color:white;background:#226c7a;border-radius:9px;height:43px;padding:0 16px;font-size:12px;font-weight:800;display:flex;justify-content:space-between;align-items:center}.primary-btn:hover{background:#145465}.primary-btn span{font-size:18px}.timer-start{flex:1}.square-btn{height:43px;width:43px;border:1px solid #dbe8e5;background:white;color:#78969a;border-radius:8px;font-size:22px}.today-row{display:flex;justify-content:space-between;border-top:1px solid #edf0ef;margin-top:18px;padding-top:14px;color:#99aeb0;font-size:11px}.today-row strong{font-size:12px;color:#3a7d83}.action-panel{padding:19px 20px}.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:17px}.action-btn{height:50px;border:1px solid #e4eceb;background:#f9fbfa;border-radius:8px;font-size:12px;color:#67858b;display:flex;align-items:center;justify-content:center;gap:6px}.action-btn:hover{border-color:#7fbeba;background:#eff8f6}.action-btn span{font-size:19px;color:#438a92}.ambience-panel{padding:17px 19px}.switch{background:#dce7e6;border:none;border-radius:20px;width:43px;height:25px;padding:3px;transition:background .2s}.switch span{display:block;background:white;width:19px;height:19px;border-radius:50%;box-shadow:0 1px 3px #0002;transition:transform .2s}.switch.on{background:#2c8990}.switch.on span{transform:translateX(18px)}.sound-bottom{display:flex;align-items:center;gap:13px;margin-top:16px;font-size:11px;color:#91a4a8}.sound-bottom span{white-space:nowrap}.sound-bottom input{width:100%;accent-color:#368991}.sound-note{font-size:10px;color:#9daeb0;margin:9px 0 0}.leave-btn{margin-top:1px;border:none;background:none;font-size:12px;color:#a0adb0;display:block;width:100%;padding:12px}.leave-btn:hover{color:#287782}.footer{margin:45px 0 20px;border-top:1px solid #dde8e6;padding-top:19px;display:flex;justify-content:space-between;color:#9eb0b3;font-size:10px;letter-spacing:.08em}.join-overlay{position:absolute;inset:56px 0 55px;display:flex;justify-content:center;align-items:center;background:linear-gradient(135deg,#193d4f65,#284d5969);backdrop-filter:blur(2.5px)}.join-overlay.hidden{display:none}.join-card{width:330px;background:#fffffff5;border-radius:17px;box-shadow:0 15px 45px #1d43577a;padding:23px 26px 22px;text-align:center;max-height:98%;overflow-y:auto}.join-icon{font-size:28px;width:52px;height:52px;display:grid;place-items:center;border-radius:16px;background:#e4f4ed;margin:0 auto 9px}.mini-label{color:#55949b;font-size:9px;letter-spacing:.2em;font-weight:900}.join-card h2{margin:7px 0 7px;font-size:20px;letter-spacing:-.05em;color:#214755}.join-card p{font-size:11px;line-height:1.7;color:#799096;margin:0 0 17px}.field-label{display:block;text-align:left;font-size:11px;font-weight:800;color:#53747b;margin-bottom:7px}.join-card input{width:100%;border-radius:8px;border:1px solid #dbe7e5;background:white;font-size:12px;padding:12px;color:#325462;outline:none}.join-card input:focus{border-color:#65a8ad}.avatar-label{margin-top:15px}.avatar-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.avatar-choice{border:1px solid #e0eae8;border-radius:8px;padding:7px 3px;background:#fff;color:#77969b;font-size:10px;display:flex;flex-direction:column;align-items:center;gap:3px}.avatar-choice.active{border:2px solid #4c9ca0;background:#f1f9f6;padding:6px 2px}.avatar-face{display:grid;place-items:center;width:31px;height:31px;border-radius:50%;position:relative;font-size:10px;color:#3b3841}.avatar-face::after{content:'•ᴗ•';position:absolute;color:#3c4450;font-size:11px;bottom:9px}.face-a{background:#edb2a7}.face-b{background:#a9bacd}.face-c{background:#d2bae3}.face-d{background:#a3d7c7}.join-card .primary-btn{width:100%;margin-top:12px}.join-note{display:block;color:#9cacb0;font-size:9px;margin-top:9px}.join-error{color:#bc5555;font-size:10px;min-height:0;margin-top:4px}.toast{position:fixed;z-index:10;bottom:30px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#183e4d;color:white;padding:12px 17px;border-radius:10px;box-shadow:0 15px 35px #102f3f3c;font-size:12px;transition:all .2s;max-width:calc(100vw - 40px)}.toast.show{opacity:1;transform:translate(-50%,0)}.help-dialog{border:1px solid #d5e5e2;border-radius:15px;padding:0;max-width:450px;color:#486a75;box-shadow:0 20px 90px #0005}.help-dialog::backdrop{background:#112d3d9c;backdrop-filter:blur(4px)}.help-dialog form{padding:24px}.dialog-title{display:flex;justify-content:space-between}.dialog-title h2{font-size:20px;color:#234452;margin:0}.dialog-close{border:0;background:none;font-size:25px;color:#789099}.help-dialog p{font-size:13px;line-height:1.8}.help-dialog .primary-btn{width:100%;justify-content:center}@media(max-width:1180px){.shell{padding:0 23px}.main-layout{grid-template-columns:minmax(0,1fr) 285px;gap:20px}.panel{padding:15px}.timer-number{font-size:44px}.join-card{transform:scale(.9)}}@media(max-width:850px){.site-header{height:73px}.main-layout{display:flex;flex-direction:column;padding-top:24px;gap:20px}.heading-row{margin-top:17px;margin-bottom:18px}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:10px}.sidebar-head{grid-column:1/-1;margin-bottom:0}.panel{margin:0}.timer-panel{grid-row:span 2}.leave-btn{grid-column:1/-1}.location-seal{width:66px;height:66px;font-size:7px}.location-seal b{font-size:17px}.stage-footnote{margin-top:8px}.footer{margin-top:25px}}@media(max-width:550px){.shell{padding:0 12px}.brand-wave{width:36px;height:36px;font-size:27px}.brand-copy strong{font-size:17px}.brand-copy small{font-size:6.5px}.header-right .beta,.header-right .top-dot{display:none}.header-right{font-size:10px;gap:6px}h1{font-size:27px}.subtitle{font-size:11px}.heading-row{align-items:flex-end}.location-seal{display:none}.world-toolbar{padding:0 11px;height:44px}.world-label{gap:4px;font-size:9px}.world-label strong{font-size:10px}.world-count{font-size:9px;padding:6px}.canvas-tip{font-size:9px;padding:6px 8px;top:8px;left:7px}.world-bottom{min-height:42px;padding:8px}.zone-pill{font-size:9px;padding:6px}.world-hint{display:none}.join-overlay{inset:44px 0 42px}.join-card{width:325px;padding:17px 22px;max-height:none;transform:scale(.79)}.join-card .join-icon{display:none}.join-card p{margin-bottom:10px}.join-card h2{font-size:17px}.avatar-label{margin-top:9px}.join-card .primary-btn{margin-top:7px}.sidebar{grid-template-columns:1fr 1fr;gap:8px}.sidebar-head{grid-column:1/-1}.person-panel{grid-column:1/-1}.timer-panel{grid-column:1/-1}.action-panel,.ambience-panel{grid-column:1/-1}.timer-number{font-size:49px}.footer{gap:8px;font-size:8px;line-height:1.5}.footer span:last-child{text-align:right}}@media(max-width:375px){.join-card{transform:scale(.71)}.world-label .sep{display:none}.world-count{font-size:8px}}
+
+</style>
+</head>
+<body>
+  <div class="shell">
+    <header class="site-header">
+      <div class="brand-mark"><span class="brand-wave">≈</span><div class="brand-copy"><strong>OCEAN <i>DESK</i></strong><small>YOUR QUIET PLACE BY THE SEA</small></div></div>
+      <div class="header-right"><span class="beta">PREVIEW 01</span><span class="top-dot"></span><span id="connectionLabel">로컬 체험 모드</span><button type="button" id="helpBtn" class="icon-pill" aria-label="사용법">?</button></div>
+    </header>
+
+    <main class="main-layout">
+      <section class="stage-section" aria-label="산토리니 가상 카페">
+        <div class="stage-overline"><span class="eyebrow">001 / THE FIRST DESTINATION</span><span class="tiny-caption">A LITTLE CLOSER TO THE SEA</span></div>
+        <div class="heading-row"><div><p class="location"><span class="pulse"></span> GREECE · SANTORINI</p><h1>파도 소리가 흐르는<br /><em>나만의 작은 카페</em></h1><p class="subtitle">잠시 쉬어도, 오래 집중해도 좋은 곳. 여기서는 각자의 속도로 머뭅니다.</p></div><span class="location-seal">SANTORINI<br/><b>01</b></span></div>
+
+        <div class="world-frame" id="worldFrame">
+          <div class="world-toolbar"><div class="world-label"><span class="little-sun">☼</span><strong>산토리니 · 오션 테라스</strong><span class="sep">/</span>모든 좌석 12석</div><div class="world-count"><span id="seatCount">0/12</span> 좌석 이용 중</div></div>
+          <div class="canvas-holder" id="canvasHolder"><canvas id="worldCanvas" width="1200" height="700" aria-label="가상 카페 화면, 좌석을 클릭해 앉을 수 있습니다"></canvas><div class="canvas-tip" id="canvasTip">바닥을 클릭하면 걷고, 의자를 누르면 앉을 수 있어요</div></div>
+          <div class="world-bottom"><div class="world-zones"><span class="zone-pill"><span class="z-icon">☕</span> 오션 카페 <b>6석</b></span><span class="zone-pill"><span class="z-icon">▤</span> 조용한 독서실 <b>6석</b></span></div><span id="worldHint" class="world-hint">입장 전 둘러보기</span></div>
+          <div id="joinOverlay" class="join-overlay">
+            <div class="join-card"><div class="join-icon">☕</div><span class="mini-label">COME AS YOU ARE</span><h2>오늘은 바다 앞에 앉아볼까요?</h2><p>닉네임과 캐릭터를 선택하고 입장하세요.<br/>회원가입 없이 이 브라우저에서 체험할 수 있습니다.</p>
+              <label class="field-label" for="nickname">나의 닉네임</label><input id="nickname" type="text" placeholder="예: 파도소리" maxlength="12" autocomplete="off" value="바다산책" />
+              <p class="field-label avatar-label">나의 캐릭터</p><div class="avatar-picker" role="group" aria-label="캐릭터 선택">
+                <button class="avatar-choice active" data-avatar="0" type="button"><span class="avatar-face face-a">●</span><span>코랄</span></button>
+                <button class="avatar-choice" data-avatar="1" type="button"><span class="avatar-face face-b">●</span><span>네이비</span></button>
+                <button class="avatar-choice" data-avatar="2" type="button"><span class="avatar-face face-c">●</span><span>라일락</span></button>
+                <button class="avatar-choice" data-avatar="3" type="button"><span class="avatar-face face-d">●</span><span>민트</span></button>
+              </div><div id="joinError" class="join-error" role="alert"></div>
+              <button id="joinBtn" class="primary-btn" type="button">산토리니로 입장하기 <span>↗</span></button><small class="join-note">* 현재는 로컬 시연 버전으로, 다른 이용자와 연결되지는 않습니다.</small>
+            </div>
+          </div>
+        </div>
+        <p class="stage-footnote"><span>✦</span> 산토리니의 감성에서 영감을 받은 창작 가상공간입니다. 실제 카페를 재현한 화면은 아닙니다.</p>
+      </section>
+
+      <aside class="sidebar">
+        <div class="sidebar-head"><span class="eyebrow">YOUR CORNER</span><span id="clockLabel" class="local-time">--:--</span></div>
+        <section class="panel person-panel"><div class="person-top"><div class="person-portrait" id="portrait">☕</div><div><span class="overline">TODAY'S GUEST</span><h3 id="profileName">아직 입장 전</h3><p id="profileSub">바다에서 만나요</p></div></div><div class="status-chips"><button class="status-chip active" data-mode="rest">☕ 휴식</button><button class="status-chip" data-mode="focus">▤ 집중</button></div></section>
+        <section class="panel timer-panel"><div class="panel-title"><div><span class="eyebrow">FOCUS TIME</span><h3>오늘의 집중</h3></div><span class="panel-mark">◷</span></div><div class="timer-number" id="timerText">25:00</div><p class="timer-description" id="timerDesc">잠시 멈추고, 나만의 속도로.</p><div class="timer-presets"><button class="preset active" data-min="25">25분</button><button class="preset" data-min="50">50분</button><button class="preset" data-min="0">자유</button></div><div class="timer-actions"><button id="timerStart" class="primary-btn timer-start">집중 시작 <span>→</span></button><button id="timerReset" class="square-btn" aria-label="타이머 초기화" title="초기화">↺</button></div><div class="today-row"><span>오늘 누적 집중</span><strong id="totalFocus">00시간 00분</strong></div></section>
+        <section class="panel action-panel"><div class="panel-title"><div><span class="eyebrow">SMALL MOMENTS</span><h3>여기서 할 수 있는 일</h3></div></div><div class="action-grid"><button id="actionSit" class="action-btn"><span>▱</span> 앉기</button><button id="actionStand" class="action-btn"><span>↟</span> 일어서기</button><button id="actionRead" class="action-btn"><span>▤</span> 책 읽기</button><button id="actionSip" class="action-btn"><span>☕</span> 커피 한 모금</button></div></section>
+        <section class="panel ambience-panel"><div class="panel-title"><div><span class="eyebrow">THE SOUNDS OF SEA</span><h3>파도 소리</h3></div><button id="soundToggle" class="switch" type="button" aria-checked="false" role="switch"><span></span></button></div><div class="sound-bottom"><span>잔잔한 바다의 소리</span><input type="range" id="volume" min="0" max="100" value="35" aria-label="파도 소리 볼륨" /></div><p class="sound-note">소리는 직접 켜야 재생됩니다.</p></section>
+        <button id="exitBtn" class="leave-btn" type="button">↗ 공간에서 나가기</button>
+      </aside>
+    </main>
+    <footer class="footer"><span>OCEAN DESK © 2026 · FIRST PROTOTYPE</span><span>실제 사람이 아닌 로컬 체험 버전 · 베타 테스트 준비 중</span></footer>
+  </div>
+  <div id="toast" class="toast" aria-live="polite"></div>
+  <dialog id="helpDialog" class="help-dialog"><form method="dialog"><div class="dialog-title"><h2>OCEAN DESK 이용법</h2><button type="submit" class="dialog-close">×</button></div><p>입장한 뒤 바닥을 클릭하거나 터치하면 캐릭터가 이동합니다. 의자를 누르면 해당 자리로 걸어가 앉습니다. 오른쪽에서 집중 타이머와 행동을 선택할 수 있습니다.</p><p>첫 버전은 브라우저 안에서 혼자 이용하는 <strong>로컬 체험판</strong>입니다. 동시 접속과 좌석 공유는 Supabase 연결 후 추가됩니다.</p><button class="primary-btn" type="submit">알겠습니다</button></form></dialog>
+  <script>
+const WORLD_W = 1200;
+const WORLD_H = 700;
+const COLORS = ['#ec9d8e','#486c94','#ae88c8','#66b6a5'];
+const SEATS = [
+  {id:'C01',x:215,y:436,kind:'cafe'}, {id:'C02',x:350,y:436,kind:'cafe'}, {id:'C03',x:485,y:436,kind:'cafe'},
+  {id:'C04',x:215,y:576,kind:'cafe'}, {id:'C05',x:350,y:576,kind:'cafe'}, {id:'C06',x:485,y:576,kind:'cafe'},
+  {id:'D01',x:740,y:436,kind:'study'}, {id:'D02',x:876,y:436,kind:'study'}, {id:'D03',x:1012,y:436,kind:'study'},
+  {id:'D04',x:740,y:576,kind:'study'}, {id:'D05',x:876,y:576,kind:'study'}, {id:'D06',x:1012,y:576,kind:'study'}
+];
+const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+const rounded=(ctx,x,y,w,h,r)=>{ctx.beginPath();ctx.roundRect(x,y,w,h,r)};
+function poly(ctx,points,color){ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(...points[0]);points.slice(1).forEach(p=>ctx.lineTo(...p));ctx.closePath();ctx.fill()}
+function rect(ctx,x,y,w,h,col){ctx.fillStyle=col;ctx.fillRect(x,y,w,h)}
+function circle(ctx,x,y,r,col){ctx.fillStyle=col;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
+function txt(ctx,s,x,y,size,color,weight=600,align='left'){ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillStyle=color;ctx.font=`${weight} ${size}px ui-sans-serif,system-ui,sans-serif`;ctx.fillText(s,x,y)}
+function drawUmbrella(ctx,x,y,t){ctx.save();ctx.translate(x,y);rect(ctx,-2,0,4,74,'#688f91');circle(ctx,0,-10,36,'#f1f6ed');poly(ctx,[[-38,-8],[-15,-35],[8,-43],[28,-27],[39,-8]],'#f5f9f2');poly(ctx,[[-14,-35],[8,-43],[15,-8]],'#badce0');ctx.globalAlpha=.3;circle(ctx,1,77,40,'#466b68');ctx.restore()}
+function drawPlant(ctx,x,y,s=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);rect(ctx,-10,-2,20,26,'#eddbba');poly(ctx,[[-12,-2],[12,-2],[8,24],[-7,24]],'#d4b88b');for(let i=0;i<9;i++){let a=-Math.PI+(i*Math.PI/8);let lx=Math.cos(a)*23,ly=Math.sin(a)*39-8;ctx.strokeStyle=['#447a68','#689e79','#77a788'][i%3];ctx.lineWidth=7;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(0,3);ctx.quadraticCurveTo(lx*.5,ly+18,lx,ly);ctx.stroke()}ctx.restore()}
+function drawSea(ctx,t){let grad=ctx.createLinearGradient(0,0,0,410);grad.addColorStop(0,'#86cadb');grad.addColorStop(.47,'#d9ecdc');grad.addColorStop(.81,'#a6dde1');grad.addColorStop(1,'#7dc0ca');rect(ctx,0,0,1200,400,grad);circle(ctx,982,91,49,'#f7e2aa');circle(ctx,982,91,69,'#ffe9b344');for(let i=0;i<4;i++){let x=150+i*264+Math.sin(t*.00012+i)*7,y=64+(i%2)*42;circle(ctx,x,y,24,'#fffefd99');circle(ctx,x+30,y-5,32,'#fffefd99');circle(ctx,x+60,y+4,23,'#fffefd99');rect(ctx,x-2,y+10,70,16,'#fffefd99')}
+let sea=ctx.createLinearGradient(0,240,0,410);sea.addColorStop(0,'#63afb9');sea.addColorStop(1,'#4b9eae');rect(ctx,0,247,1200,162,sea);poly(ctx,[[0,260],[72,243],[125,247],[195,257],[270,254],[322,269],[0,275]],'#639ba3');poly(ctx,[[902,266],[995,245],[1050,252],[1110,235],[1200,250],[1200,274]],'#7da9a9');for(let i=0;i<47;i++){let x=(i*91.3+Math.sin(t*.00045+i)*9)%1200;let y=280+i%9*13;ctx.strokeStyle=`rgba(255,255,255,${.11+(i%3)*.05})`;ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+16+(i%4)*7,y+Math.sin(t*.001+i)*2);ctx.stroke()}
+for(let i=0;i<13;i++){let y=288+i*9;let x=982+(Math.sin(t*.001+i)*4);rect(ctx,x-7-i*2,y,11+i*4,1.5,`rgba(255,230,177,${.22-i*.012})`)} }
+function drawArchitecture(ctx,t){ // Santorini arches, walls, terraces
+rect(ctx,0,220,100,210,'#f1f2e6');rect(ctx,1100,200,100,220,'#f1f2e6');
+rect(ctx,0,208,110,25,'#fbfbf1');rect(ctx,1090,191,110,24,'#fbfbf1');
+rounded(ctx,10,114,88,106,8);ctx.fillStyle='#fbf9eb';ctx.fill();rounded(ctx,1102,101,89,107,8);ctx.fillStyle='#fbf9eb';ctx.fill();
+rounded(ctx,29,145,43,71,23);ctx.fillStyle='#39748c';ctx.fill();rounded(ctx,1119,139,53,72,22);ctx.fillStyle='#467f94';ctx.fill();
+rect(ctx,0,382,1200,35,'#e4e4d5');rect(ctx,0,402,1200,298,'#d6d8be');
+poly(ctx,[[0,424],[1200,424],[1200,700],[0,700]],'#e8dfc4');
+for(let y=425;y<720;y+=54){ctx.strokeStyle='#d4c9ac';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(1200,y);ctx.stroke()}
+for(let x=-100;x<1500;x+=130){ctx.strokeStyle='#d2c5a7';ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(x,420);ctx.lineTo(x-120,700);ctx.stroke()}
+// ocean-side railing behind seats
+rect(ctx,102,341,991,8,'#fffaf0');for(let i=0;i<18;i++)rect(ctx,117+i*57,342,6,62,'#f8f8ec');rect(ctx,95,400,1010,9,'#f4f0e0');
+// vertical planter dividing focus room
+rect(ctx,604,347,12,332,'#eef0e4');rect(ctx,600,347,20,15,'#fffdf2');
+for(let y=395;y<665;y+=80){circle(ctx,605,y,9,'#91ada3');circle(ctx,598,y-4,13,'#4e9987');circle(ctx,612,y-5,12,'#7aaf8d')}
+// cafe bar back left
+rounded(ctx,116,337,336,38,10);ctx.fillStyle='#fcf5df';ctx.fill();rect(ctx,133,340,300,6,'#d0ac80');
+rect(ctx,130,320,17,16,'#e4c497');rect(ctx,151,314,17,22,'#d4b58b');circle(ctx,141,313,6,'#f5f3df');circle(ctx,159,308,7,'#eee9d5');
+// study section back wall and signage
+rounded(ctx,685,299,419,51,14);ctx.fillStyle='#faf9ee';ctx.fill();txt(ctx,'QUIET STUDY TERRACE',891,326,19,'#5e8890',700,'center');
+ctx.strokeStyle='#ececdf';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(612,333);ctx.lineTo(1200,333);ctx.stroke();
+// windows
+for(let i=0;i<3;i++){let x=719+i*139;rounded(ctx,x,344,100,47,11);ctx.fillStyle='#e5efe6';ctx.fill();rect(ctx,x+8,350,83,3,'#f9fbf1')}
+// decorative plant corners
+for(const [x,y,s] of [[74,443,1.2],[575,666,1.3],[1133,427,1.2],[1150,654,1.3]])drawPlant(ctx,x,y,s);
+// gentle pennant
+for(let i=0;i<8;i++){let xx=160+i*44;ctx.strokeStyle='#efe9d8';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(160,279);ctx.quadraticCurveTo(320,303,483,278);ctx.stroke();poly(ctx,[[xx,291],[xx+13,290],[xx+6,307]],i%2?'#9bcbd0':'#f6d4ad')}
+}
+function drawDesk(ctx,seat,chosen,taken){let x=seat.x,y=seat.y,study=seat.kind==='study';ctx.save(); // shadow
+ctx.fillStyle='#5b685a29';ctx.beginPath();ctx.ellipse(x,y+35,59,16,0,0,Math.PI*2);ctx.fill();
+if(study){rounded(ctx,x-47,y-18,94,31,6);ctx.fillStyle='#f6efde';ctx.fill();rect(ctx,x-38,y-18,74,5,'#c8b08d');rect(ctx,x-33,y+10,6,24,'#bba889');rect(ctx,x+28,y+10,6,24,'#bba889');rect(ctx,x+18,y-18,20,13,'#eff1e4');rect(ctx,x+10,y-14,13,4,'#e5bb8e');}
+else {circle(ctx,x,y-14,40,'#fbf5e7');ctx.fillStyle='#f9e9cd';ctx.beginPath();ctx.ellipse(x,y-16,42,16,0,0,Math.PI*2);ctx.fill();rect(ctx,x-4,y-3,8,42,'#bbad92');rect(ctx,x-13,y+34,27,5,'#afa289');circle(ctx,x+21,y-17,9,'#fcfcf7');circle(ctx,x+21,y-17,5,'#c4a27b');}
+rounded(ctx,x-22,y+9,44,31,9);ctx.fillStyle=study?'#7d9ca6':'#7ea3a7';ctx.fill();rect(ctx,x-19,y+10,38,6,study?'#b0c7c7':'#b9d9d7');rect(ctx,x-20,y+30,5,20,'#738b8f');rect(ctx,x+15,y+30,5,20,'#738b8f');
+if(chosen){ctx.strokeStyle='#eeaa66';ctx.lineWidth=4;ctx.beginPath();ctx.ellipse(x,y+11,50,28,0,0,Math.PI*2);ctx.stroke()}
+ctx.beginPath();ctx.arc(x+39,y-37,12,0,Math.PI*2);ctx.fillStyle=chosen?'#d99b50':taken?'#e8bda9':'#f9fcf4';ctx.fill();ctx.strokeStyle=chosen?'#fff5dc':'#cbdad6';ctx.lineWidth=1.8;ctx.stroke();txt(ctx,seat.id,x+39,y-36,8,chosen||taken?'#fff':'#70969c',800,'center');ctx.restore();}
+function drawAvatar(ctx,p,t,own){let b=(p.moving?Math.sin(t*.015)*3:Math.sin(t*.003)*1.4);let x=p.x,y=p.y+b, color=COLORS[p.avatar]||COLORS[0];ctx.save();ctx.translate(x,y);if(p.sitting)ctx.translate(0,10); // feet shadow
+ctx.fillStyle='#27495825';ctx.beginPath();ctx.ellipse(0,25,21,7,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#50646e';rect(ctx,-10,12,8,18,'#45616b');rect(ctx,3,12,8,18,'#45616b');
+rounded(ctx,-17,-19,34,38,12);ctx.fillStyle=color;ctx.fill();rounded(ctx,-16,-24,32,15,8);ctx.fillStyle=color;ctx.fill();
+// neck and head
+rect(ctx,-5,-25,10,8,'#f2c8ac');circle(ctx,0,-42,24,'#f1c4a2');
+// hairstyle variable
+ctx.fillStyle=['#3c4753','#2c3c51','#614a5a','#4c504a'][p.avatar];ctx.beginPath();ctx.arc(0,-48,24,Math.PI,Math.PI*2);ctx.lineTo(24,-37);ctx.quadraticCurveTo(11,-50,0,-48);ctx.quadraticCurveTo(-15,-38,-24,-36);ctx.closePath();ctx.fill();
+if(p.avatar===2){circle(ctx,-23,-45,10,'#614a5a');circle(ctx,22,-46,10,'#614a5a')}
+if(p.avatar===3){circle(ctx,-21,-46,9,'#4c504a');circle(ctx,20,-46,9,'#4c504a')}
+// features
+circle(ctx,-8,-41,2,'#4f4a4b');circle(ctx,8,-41,2,'#4f4a4b');ctx.strokeStyle='#a66561';ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(0,-36,4,.1,Math.PI-.1);ctx.stroke();
+if(p.action==='read'){rounded(ctx,-21,-12,42,22,2);ctx.fillStyle='#fff7d7';ctx.fill();rect(ctx,-1,-12,2,22,'#bba887');txt(ctx,'≋',-11,0,13,'#a2a887',500,'center');txt(ctx,'≋',11,0,13,'#a2a887',500,'center')}
+if(p.action==='sip'){circle(ctx,18,-17,9,'#f4f8ed');circle(ctx,18,-17,5,'#a98a67')}
+if(own){ctx.strokeStyle='#e6b377';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,7,26,35,0,0,Math.PI*2);ctx.stroke()}
+ctx.restore();
+let label=p.nickname||'나';rounded(ctx,x-34,y-94,68,21,10);ctx.fillStyle=own?'#1d6471e8':'#3c6c76d9';ctx.fill();txt(ctx,label.slice(0,7),x,y-83,10,'#fff',700,'center');if(p.mode==='focus'){circle(ctx,x+37,y-83,8,'#d9ad64');txt(ctx,'●',x+37,y-82,6,'#fff',900,'center')}}
+class OceanWorld {
+ constructor(canvas,{onSeatClick,onFloorClick}){this.canvas=canvas;this.ctx=canvas.getContext('2d');this.onSeatClick=onSeatClick;this.onFloorClick=onFloorClick;this.player={x:550,y:640,tx:550,ty:640,avatar:0,mode:'rest',nickname:'',moving:false,sitting:false,action:'idle'};this.seat=null;this.occupied={};this.started=performance.now();this.alive=true;this.last=performance.now();this.onPointer=this.pointer.bind(this);this.canvas.addEventListener('pointerdown',this.onPointer);this.loop=this.loop.bind(this);this.raf=requestAnimationFrame(this.loop)}
+ pointer(ev){const r=this.canvas.getBoundingClientRect();let x=(ev.clientX-r.left)*WORLD_W/r.width;let y=(ev.clientY-r.top)*WORLD_H/r.height;let nearest=SEATS.map(s=>({...s,d:Math.hypot(x-s.x,y-s.y)})).sort((a,b)=>a.d-b.d)[0];if(nearest && nearest.d<56){this.onSeatClick?.(nearest.id);return}if(y>403&&y<687){this.onFloorClick?.({x:clamp(x,85,1120),y:clamp(y,433,667)})}}
+ setPlayer(a){Object.assign(this.player,a)}
+ moveTo(x,y){Object.assign(this.player,{tx:clamp(x,90,1115),ty:clamp(y,419,650),moving:true,sitting:false,action:'idle'})}
+ sit(id){let s=SEATS.find(s=>s.id===id);if(!s)return;this.seat=id;Object.assign(this.player,{tx:s.x,ty:s.y+16,moving:true,sitting:false,action:'idle'})}
+ stand(){this.seat=null;Object.assign(this.player,{tx:Math.min(this.player.x+40,1130),ty:Math.min(this.player.y+52,660),moving:true,sitting:false,action:'idle'})}
+ act(action){this.player.action=action}
+ loop(now){if(!this.alive)return;const dt=Math.min((now-this.last)/1000,.065);this.last=now;const p=this.player;let dx=p.tx-p.x,dy=p.ty-p.y,d=Math.hypot(dx,dy);if(d>2){let dist=Math.min(d,175*dt);p.x+=dx/d*dist;p.y+=dy/d*dist;p.moving=true}else if(p.moving){p.x=p.tx;p.y=p.ty;p.moving=false;if(this.seat)p.sitting=true}
+ const c=this.ctx;c.clearRect(0,0,WORLD_W,WORLD_H);drawSea(c,now);drawArchitecture(c,now);SEATS.forEach(s=>drawDesk(c,s,s.id===this.seat,Boolean(this.occupied[s.id])));
+ // Painted decorative touchpoints and labels
+ rounded(c,113,414,447,228,16);c.strokeStyle='#f8eee083';c.lineWidth=3;c.stroke();
+ c.save();c.setLineDash([5,6]);c.strokeStyle='#87aeb669';c.strokeRect(630,418,463,232);c.restore();
+ txt(c,'C A F É   T E R R A C E',330,666,13,'#537e81',800,'center');txt(c,'Q U I E T   Z O N E',864,666,13,'#64838b',800,'center');
+ if(p.nickname)drawAvatar(c,p,now,true);
+ this.raf=requestAnimationFrame(this.loop)}
+ destroy(){this.alive=false;cancelAnimationFrame(this.raf);this.canvas.removeEventListener('pointerdown',this.onPointer)}
+}
+
+
+const $=id=>document.getElementById(id);
+const getStorage=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}};
+const setStorage=(key,val)=>{try{localStorage.setItem(key,JSON.stringify(val))}catch{}};
+const state={entered:false,nickname:'',avatar:0,seat:null,mode:'rest',timerMin:25,timerStart:null,timerAccum:0,running:false,completedSeconds:getStorage('ocean-focus-seconds',0),audioOn:false};
+let toastTimeout=null;
+const toast=message=>{let el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el.classList.remove('show'),3200)};
+const world=new OceanWorld($('worldCanvas'),{
+  onSeatClick(id){if(!state.entered){toast('먼저 산토리니에 입장해 주세요.');return} if(state.seat===id){toast('이미 선택하신 자리입니다.');return}state.seat=id;hybridSeatPending=id;world.sit(id);$('worldHint').textContent=`${id} 좌석 이용 중`;$('seatCount').textContent='1/12';toast(`${id} 좌석으로 이동합니다.`)},
+  onFloorClick({x,y}){if(!state.entered){toast('먼저 입장해 주세요.');return} if(state.seat){state.seat=null;$('worldHint').textContent='자유롭게 둘러보는 중';$('seatCount').textContent='0/12'}world.seat=null;world.moveTo(x,y)}
+});
+function setMode(mode){state.mode=mode;world.setPlayer({mode});document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));$('profileSub').textContent=mode==='focus'?'조용히 집중하는 중':'바다를 보며 쉬는 중'}
+function enter(){const nick=$('nickname').value.trim();if(nick.length<2||nick.length>12){$('joinError').textContent='닉네임은 2~12자로 입력해 주세요.';return}if(/[<>\\]/.test(nick)){$('joinError').textContent='사용할 수 없는 문자가 포함되어 있습니다.';return}state.entered=true;state.nickname=nick;world.setPlayer({nickname:nick,avatar:state.avatar});$('profileName').textContent=nick;$('portrait').textContent=['🌺','🌊','📖','🌿'][state.avatar];$('portrait').style.background=['#fbeae4','#e7f0f9','#f3eaf8','#e4f5ee'][state.avatar];$('joinOverlay').classList.add('hidden');$('worldHint').textContent='빈 의자나 바닥을 눌러보세요';setMode(state.mode);toast(`${nick}님, 산토리니에 오신 것을 환영합니다!`)}
+$('joinBtn').addEventListener('click',enter);$('nickname').addEventListener('keydown',e=>{if(e.key==='Enter')enter()});document.querySelectorAll('[data-avatar]').forEach(b=>b.addEventListener('click',()=>{state.avatar=Number(b.dataset.avatar);document.querySelectorAll('[data-avatar]').forEach(x=>x.classList.toggle('active',x===b));$('joinError').textContent=''}));document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
+function mustEnter(){if(state.entered)return true;toast('입장 후 이용할 수 있습니다.');return false}
+$('actionSit').addEventListener('click',()=>{if(!mustEnter())return;const seat=SEATS.find(s=>s.id===state.seat)||SEATS.find(s=>s.kind===(state.mode==='focus'?'study':'cafe'));world.onSeatClick(seat.id)});
+$('actionStand').addEventListener('click',()=>{if(!mustEnter())return;if(!state.seat){toast('현재 서 계십니다.');return}state.seat=null;world.stand();$('seatCount').textContent='0/12';$('worldHint').textContent='자유롭게 둘러보는 중';toast('자리에서 일어났습니다.')});
+$('actionRead').addEventListener('click',()=>{if(!mustEnter())return;world.act('read');setMode('focus');toast('책을 펼쳤습니다. 좋은 집중 되세요!')});
+$('actionSip').addEventListener('click',()=>{if(!mustEnter())return;world.act('sip');setMode('rest');toast('따뜻한 커피 한 모금 ☕');setTimeout(()=>{if(world.player.action==='sip')world.act('idle')},1700)});
+$('exitBtn').addEventListener('click',()=>{if(!state.entered)return toast('아직 입장하지 않았습니다.');if(state.running)pauseTimer();state.entered=false;state.seat=null;world.seat=null;world.setPlayer({nickname:'',sitting:false,action:'idle'});$('joinOverlay').classList.remove('hidden');$('profileName').textContent='아직 입장 전';$('profileSub').textContent='바다에서 만나요';$('portrait').textContent='☕';$('seatCount').textContent='0/12';$('worldHint').textContent='입장 전 둘러보기';toast('다음에 또 만나요!')});
+let toastDone=false;
+const pretty=n=>String(n).padStart(2,'0');
+function timerElapsed(){return state.timerAccum+(state.running&&state.timerStart?Math.max(0,Math.floor((Date.now()-state.timerStart)/1000)):0)}
+function timerRender(){let elapsed=timerElapsed(),seconds=state.timerMin===0?elapsed:Math.max(0,state.timerMin*60-elapsed);$('timerText').textContent=`${pretty(Math.floor(seconds/60))}:${pretty(seconds%60)}`;$('timerDesc').textContent=state.running?'지금 이 순간, 나에게 집중하는 중':state.timerMin===0?'시간을 정하지 않고 자유롭게 집중하세요':'잠시 멈추고, 나만의 속도로.';let whole=state.completedSeconds;$('totalFocus').textContent=`${pretty(Math.floor(whole/3600))}시간 ${pretty(Math.floor(whole%3600/60))}분`;
+ $('timerStart').innerHTML=state.running?'일시정지 <span>Ⅱ</span>':elapsed?'이어 집중하기 <span>→</span>':'집중 시작 <span>→</span>';
+ if(state.running && state.timerMin>0 && elapsed>=state.timerMin*60 && !toastDone){toastDone=true;state.completedSeconds+=state.timerMin*60;setStorage('ocean-focus-seconds',state.completedSeconds);state.timerStart=null;state.running=false;state.timerAccum=0;world.act('idle');toast(`🎉 ${state.timerMin}분 집중을 완료하셨습니다!`);timerRender()}}
+function pauseTimer(){state.timerAccum=timerElapsed();state.running=false;state.timerStart=null;timerRender()}
+$('timerStart').addEventListener('click',()=>{if(!mustEnter())return;if(state.running){pauseTimer();toast('잠깐 쉬어도 괜찮습니다.');return}toastDone=false;state.running=true;state.timerStart=Date.now();setMode('focus');world.act('read');timerRender();toast('집중을 시작했습니다. 파이팅!')});
+$('timerReset').addEventListener('click',()=>{if(state.timerAccum>0||state.running){const elapsed=timerElapsed();state.completedSeconds+=elapsed;setStorage('ocean-focus-seconds',state.completedSeconds)}state.running=false;state.timerStart=null;state.timerAccum=0;toastDone=false;timerRender();toast('타이머를 초기화했습니다. 지난 집중 시간은 저장되었습니다.')});
+document.querySelectorAll('[data-min]').forEach(b=>b.addEventListener('click',()=>{if(state.running)pauseTimer();state.timerMin=Number(b.dataset.min);state.timerStart=null;state.timerAccum=0;toastDone=false;document.querySelectorAll('[data-min]').forEach(x=>x.classList.toggle('active',x===b));timerRender()}));
+// Simple, entirely generated ocean-like filtered noise, started only after user gesture
+let audioCtx=null,source=null,filter=null,gain=null,modOsc=null,modGain=null;
+function startOcean(){try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();let length=audioCtx.sampleRate*3;const buffer=audioCtx.createBuffer(1,length,audioCtx.sampleRate);let d=buffer.getChannelData(0);let prev=0;for(let i=0;i<length;i++){const white=Math.random()*2-1;prev=(prev+0.015*white)/1.015;d[i]=prev*3}source=audioCtx.createBufferSource();source.buffer=buffer;source.loop=true;filter=audioCtx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=430;gain=audioCtx.createGain();gain.gain.value=Number($('volume').value)/100*.55;source.connect(filter).connect(gain).connect(audioCtx.destination);modOsc=audioCtx.createOscillator();modOsc.frequency.value=.15;modGain=audioCtx.createGain();modGain.gain.value=.09;modOsc.connect(modGain).connect(gain.gain);source.start();modOsc.start()}catch(err){console.warn(err);toast('이 브라우저에서 소리 재생이 지원되지 않습니다.')}}
+function stopOcean(){try{source?.stop();modOsc?.stop();audioCtx?.close()}catch{} source=null;modOsc=null;gain=null;audioCtx=null}
+$('soundToggle').addEventListener('click',()=>{state.audioOn=!state.audioOn;state.audioOn?startOcean():stopOcean();$('soundToggle').classList.toggle('on',state.audioOn);$('soundToggle').setAttribute('aria-checked',String(state.audioOn))});$('volume').addEventListener('input',e=>{if(gain)gain.gain.value=Number(e.target.value)/100*.55});
+$('helpBtn').addEventListener('click',()=>$('helpDialog').showModal());
+setInterval(()=>{timerRender();const d=new Date();$('clockLabel').textContent=d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false})},300);timerRender();$('clockLabel').textContent=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
+
+
+const hybridOverlay=document.getElementById('hybrid3d');
+const hybridFrame=document.getElementById('ocean3d');
+let hybridSeatPending=null,hybridOpening=false;
+function openSeated3D(id){
+ if(hybridOpening||!state.entered||!state.seat||!world.player.sitting)return;
+ hybridOpening=true;
+ const idx=SEATS.findIndex(s=>s.id===id);
+ const room=SEATS[idx]?.kind==='study'?'two':'one';
+ const seat=idx<0?0:idx%8;
+ hybridOverlay.classList.add('active');
+ hybridFrame.src='/world-v25-3d?room='+room+'&seat='+seat;
+}
+function returnToOriginal2D(){
+ hybridOverlay.classList.remove('active');hybridFrame.removeAttribute('src');
+ hybridOpening=false;hybridSeatPending=null;
+ if(state.seat){state.seat=null;world.stand();$('seatCount').textContent='0/12';$('worldHint').textContent='2D 카페 · 자유 이동 중'}
+}
+document.getElementById('return2d').addEventListener('click',returnToOriginal2D);
+window.addEventListener('message',e=>{if(e.origin===location.origin&&e.data?.type==='ocean-desk-stand')returnToOriginal2D()});
+function hybridSeatWatcher(){
+ if(hybridSeatPending&&world.player.sitting&&!world.player.moving){
+  const seat=hybridSeatPending;hybridSeatPending=null;openSeated3D(seat);
+ }
+ requestAnimationFrame(hybridSeatWatcher);
+}
+requestAnimationFrame(hybridSeatWatcher);
+
+</script>
+<style>
+#hybrid3d{position:fixed;inset:0;z-index:100;background:#88cadc;display:none}
+#hybrid3d.active{display:block}#hybrid3d iframe{width:100%;height:100%;border:0;display:block}
+#return2d{position:absolute;z-index:101;left:20px;top:20px;padding:13px 19px;border:0;border-radius:14px;background:#fffdf1;color:#205561;box-shadow:0 8px 28px #18445b66;font-weight:800;cursor:pointer}
+</style><div id="hybrid3d" aria-label="3D 착석 오션뷰"><iframe id="ocean3d" title="3D 바다 전망" allow="autoplay"></iframe><button id="return2d" type="button">← 일어나기 · 2D 카페로</button></div></body>
+</html>
