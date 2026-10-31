@@ -53,6 +53,10 @@
     {
       "source": "/world-v12",
       "destination": "/world-v12/index.html"
+    },
+    {
+      "source": "/world-v13",
+      "destination": "/world-v13/index.html"
     }
   ]
 }
