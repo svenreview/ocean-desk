@@ -97,6 +97,10 @@
     {
       "source": "/world-v23",
       "destination": "/world-v23/index.html"
+    },
+    {
+      "source": "/world-v24",
+      "destination": "/world-v24/index.html"
     }
   ]
 }
