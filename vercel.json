@@ -21,6 +21,22 @@
     {
       "source": "/world-v4",
       "destination": "/world-v4/index.html"
+    },
+    {
+      "source": "/world-v5",
+      "destination": "/world-v5/index.html"
+    },
+    {
+      "source": "/world-v6",
+      "destination": "/world-v6/index.html"
+    },
+    {
+      "source": "/world-v7",
+      "destination": "/world-v7/index.html"
+    },
+    {
+      "source": "/world-v8",
+      "destination": "/world-v8/index.html"
     }
   ]
 }
