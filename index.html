@@ -629,7 +629,7 @@ function weeklyFocusSummary(records,now=new Date()){
  const days=[];
  const unique=new Set(),valid=[];
  for(const r of records){
-  if(!r||typeof r.id!=='string'||typeof r.date!=='string'||!/^\\d{4}-\\d{2}-\\d{2}$/.test(r.date)||![25,50].includes(r.minutes)||unique.has(r.id))continue;
+  if(!r||typeof r.id!=='string'||typeof r.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(r.date)||![25,50].includes(r.minutes)||unique.has(r.id))continue;
   unique.add(r.id);valid.push(r);
  }
  for(let i=6;i>=0;i--){
