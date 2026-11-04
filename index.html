@@ -722,18 +722,20 @@ document.getElementById('odMapToGallery').onclick=()=>{
  <label class="od-account-field" for="odAccountEmail">이메일 주소</label>
  <input id="odAccountEmail" type="email" autocomplete="email" placeholder="example@email.com"/>
  <div class="od-account-actions">
+   <button id="odGoogleLoginButton" type="button" disabled>Google로 로그인</button>
    <button id="odLoginButton" type="button" disabled>이메일 로그인</button>
    <button id="odInitWalletButton" type="button" disabled>서버 지갑 준비</button>
    <button id="odRefreshButton" type="button" disabled>새로고침</button>
    <button id="odLogoutButton" type="button" disabled>로그아웃</button>
  </div>
  <div class="od-account-server"><h3 id="odServerBalance">서버 퍼즐·티켓: 로그인 후 조회</h3>
- <ul id="odServerScenes"></ul></div>
+ <ul id="odServerScenes"></ul>
+<h3>최근 집중 기록</h3><ul id="odServerSessions"></ul></div>
  <p id="odServerFocusStatus" class="od-account-note" role="status" aria-live="polite">서버 집중 검증 비활성화</p>
  <p class="od-account-note">현재 브라우저의 테스트 퍼즐·여행 티켓은 실제 계정 기록과 완전히 분리되어 있습니다. 계정 데이터의 읽기 전용 조회만 지원하며, 직접 수정·가져오기는 허용되지 않습니다.</p>
 </div></dialog>
 <script>
-window.OD_SUPABASE_CONFIG={enabled:false}; // Enable only with explicitly configured URL + PUBLIC publishable key.
+window.OD_SUPABASE_CONFIG={enabled:false,googleEnabled:false,serverFocusEnabled:false}; // Enable only with explicitly configured URL + PUBLIC publishable key.
 </script>
 <script type="module" src="./od-account.js"></script>
 <script type="module" src="./od-focus-sync.js"></script>
