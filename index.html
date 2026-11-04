@@ -237,7 +237,7 @@ setInterval(()=>{timerRender();const d=new Date();$('clockLabel').textContent=d.
 @media(max-width:600px){#oceanTop{top:9px;left:9px;right:9px;font-size:12px}#oceanTop button,#oceanFoot button{padding:9px;font-size:11px}#oceanFoot{bottom:8px}}
 </style>
 <div id="oceanOverlay" role="dialog" aria-label="선택한 자리의 3D 바다 전망">
-<div id="photoView" aria-label="산토리니 고화질 오션뷰 이미지"></div><canvas id="oceanGL"></canvas><div id="oceanError"></div>
+<div id="photoView" aria-label="산토리니 고화질 오션뷰 이미지"></div><div id="oceanLightOverlay" aria-hidden="true"></div><canvas id="oceanGL"></canvas><div id="oceanError"></div>
 <div id="oceanTop"><strong id="oceanSeatLabel">산토리니 오션뷰</strong><button id="returnCafe">← 2D 카페로</button></div>
 <aside id="viewSide" aria-label="오션뷰 조작 메뉴">
   <div class="view-side-title">MY OCEAN DESK <span>✦</span></div>
@@ -248,6 +248,7 @@ setInterval(()=>{timerRender();const d=new Date();$('clockLabel').textContent=d.
   <div class="ocean-focus-presets" aria-label="집중 시간 선택"><button type="button" id="focus25" class="chosen">25분</button><button type="button" id="focus50">50분</button></div>
   <button id="viewPause" type="button"><span class="side-ico">Ⅱ</span> 타이머 일시정지</button>
   <button id="viewWaves" type="button" aria-pressed="false"><span class="side-ico">≋</span> 파도소리 켜기</button>
+  <button id="viewLight" type="button" aria-label="풍경 조명 변경, 현재 기본 조명" data-light="natural"><span class="side-ico">☀</span> 조명 · 기본</button>
   <button id="viewMusic" type="button" disabled title="추후 지원 예정"><span class="side-ico">♫</span> 음악 (준비 중)</button>
   <button id="returnCafeBottom" type="button"><span class="side-ico">↗</span> 일어나기</button>
   <div class="side-hint" id="viewModeHint">눈앞에 펼쳐지는 산토리니의 바다</div>
@@ -416,6 +417,26 @@ for(const min of [25,50])document.getElementById('focus'+min).addEventListener('
 });
 document.getElementById('viewPause').onclick=()=>{document.getElementById('timerStart').click();syncOceanFocus()};
 document.getElementById('viewWaves').onclick=()=>{document.getElementById('soundToggle').click();syncOceanFocus()};
+const oceanLightModes=['natural','warm','dim'];
+const oceanLightLabels={natural:'기본',warm:'따뜻하게',dim:'은은하게'};
+let oceanLight='natural';
+try{const stored=localStorage.getItem('od-light-preference-v1');if(oceanLightModes.includes(stored))oceanLight=stored}catch{}
+function setOceanLight(mode){
+ if(!oceanLightModes.includes(mode))return;
+ oceanLight=mode;
+ const overlay=document.getElementById('oceanOverlay');
+ const control=document.getElementById('viewLight');
+ overlay.dataset.light=mode;
+ control.dataset.light=mode;
+ control.setAttribute('aria-label','풍경 조명 변경, 현재 '+oceanLightLabels[mode]+' 조명');
+ control.innerHTML='<span class="side-ico" aria-hidden="true">☀</span> 조명 · '+oceanLightLabels[mode];
+ try{localStorage.setItem('od-light-preference-v1',mode)}catch{}
+}
+document.getElementById('viewLight').onclick=()=>{
+ const index=oceanLightModes.indexOf(oceanLight);
+ setOceanLight(oceanLightModes[(index+1)%oceanLightModes.length]);
+};
+setOceanLight(oceanLight);
 setInterval(syncOceanFocus,500);syncOceanFocus();
 // The 3D canvas supports dragging horizontally to turn your head.
 let dragOcean=null;
@@ -471,6 +492,18 @@ oceanCanvas.addEventListener('pointercancel',()=>dragOcean=null);
  #oceanOverlay #viewSide button{min-height:44px;font-size:10px}
  #oceanOverlay #viewSide .ocean-focus-presets{grid-column:span 2}
  #oceanOverlay #oceanFoot{bottom:min(44dvh,290px)}
+}
+</style>
+<style>
+/* 30차: 정적인 조명 선택. 타이머/오디오와 분리된 비상호작용 오버레이 */
+#oceanLightOverlay{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .24s ease,background .24s ease}
+#oceanOverlay[data-light="natural"] #oceanLightOverlay{opacity:0}
+#oceanOverlay[data-light="warm"] #oceanLightOverlay{opacity:1;background:linear-gradient(140deg,rgba(255,207,127,.20),rgba(102,55,30,.12))}
+#oceanOverlay[data-light="dim"] #oceanLightOverlay{opacity:1;background:rgba(10,28,43,.29)}
+#viewLight[data-light="warm"],#viewLight[data-light="dim"]{background:#deece8!important;border-color:#9dbbb3!important}
+#viewLight:focus-visible{outline:3px solid #1c83af;outline-offset:3px}
+@media (prefers-reduced-motion:reduce){
+ #oceanLightOverlay,#photoView{transition:none!important;animation:none!important}
 }
 </style>
 <script src="./od-scenery.js"></script>
