@@ -31,7 +31,7 @@ Deno.serve(async (req:Request)=>{
   const action=body.action;
   const isUUID=(x:unknown)=>typeof x==="string" &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(x);
-  if(action!=="start"&&action!=="finish"&&action!=="cancel")return json(400,{error:"invalid_action"},cors);
+  if(action!=="start"&&action!=="finish"&&action!=="cancel"&&action!=="status")return json(400,{error:"invalid_action"},cors);
   if(action==="start"&&(!isUUID(body.request_id)||![25,50].includes(body.minutes as number)))
     return json(400,{error:"invalid_start"},cors);
   if((action==="finish"||action==="cancel")&&!isUUID(body.session_id))return json(400,{error:"invalid_finish"},cors);
@@ -45,9 +45,10 @@ Deno.serve(async (req:Request)=>{
   if(!auth.ok)return json(401,{error:"invalid_session"},cors);
   const user=await auth.json().catch(()=>null);
   if(typeof user?.id!=="string"||!isUUID(user.id))return json(401,{error:"invalid_user"},cors);
-  const rpc=action==="start"?"od_server_focus_start":action==="cancel"?"od_server_focus_cancel":"od_server_focus_finish";
+  const rpc=action==="status"?"od_server_focus_status":action==="start"?"od_server_focus_start":action==="cancel"?"od_server_focus_cancel":"od_server_focus_finish";
   const args=action==="start"
    ?{p_user_id:user.id,p_request_id:body.request_id,p_minutes:body.minutes}
+   :action==="status"?{p_user_id:user.id}
    :{p_user_id:user.id,p_session_id:body.session_id};
   let result:Response;
   try {
