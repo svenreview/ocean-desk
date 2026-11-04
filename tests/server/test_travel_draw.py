@@ -148,3 +148,87 @@ try:
 except psycopg.Error as exc:
     assert exc.sqlstate == "23503", str(exc)
 print("PASS wallet initialization: idempotent, no reset, ACL and valid user FK")
+
+
+# Verified puzzle granting requires BOTH independently server-verified receipts.
+# Test fixture inserts trusted receipts as postgres superuser; browser roles have no INSERT.
+def add_verified_receipts(uid, session_id, event_id, minutes=25, focus=True, ad=True):
+    with psycopg.connect(DSN) as conn:
+        if focus:
+            conn.execute("INSERT INTO public.od_verified_focus(session_id,user_id,planned_minutes) VALUES (%s,%s,%s)",(session_id,uid,minutes))
+        if ad:
+            conn.execute("INSERT INTO public.od_verified_ad_events(event_id,session_id,user_id,provider) VALUES (%s,%s,%s,'staging-test')",(event_id,session_id,uid))
+
+def claim(uid, session, event):
+    return query("SELECT public.od_server_claim_verified_puzzle(%s,%s,%s)",(uid,session,event),role="service_role")[0]
+
+def pieces(uid):
+    return query("SELECT pieces FROM public.od_wallets WHERE user_id=%s",(uid,))[0]
+
+for role in ("anon","authenticated"):
+    assert not query("SELECT has_function_privilege(%s,'public.od_server_claim_verified_puzzle(uuid,uuid,text)','EXECUTE')",(role,))[0]
+    for table in ("od_verified_focus","od_verified_ad_events"):
+        for permission in ("INSERT","UPDATE","SELECT"):
+            assert not query("SELECT has_table_privilege(%s,%s,%s)",(role,"public."+table,permission))[0]
+assert query("SELECT has_function_privilege('service_role','public.od_server_claim_verified_puzzle(uuid,uuid,text)','EXECUTE')")[0]
+
+reward_uid=new_user(0)
+session=uuid4()
+event="verified-ad-"+str(uuid4())
+try:
+    claim(reward_uid,session,event)
+    raise AssertionError("must require verified focus")
+except psycopg.Error as exc:
+    assert "focus_not_verified" in str(exc)
+add_verified_receipts(reward_uid,session,event,focus=True,ad=False)
+try:
+    claim(reward_uid,session,event)
+    raise AssertionError("must require verified ad receipt")
+except psycopg.Error as exc:
+    assert "ad_not_verified" in str(exc)
+add_verified_receipts(reward_uid,session,event,focus=False,ad=True)
+first_claim=claim(reward_uid,session,event)
+replayed_claim=claim(reward_uid,session,event)
+assert first_claim["replayed"] is False and replayed_claim["replayed"] is True
+assert pieces(reward_uid)==1 and balance(reward_uid)==0
+
+# Same session may not use another ad event.
+try:
+    claim(reward_uid,session,"another-"+str(uuid4()))
+    raise AssertionError("duplicate session must fail")
+except psycopg.Error as exc:
+    assert "session_already_claimed" in str(exc)
+assert pieces(reward_uid)==1
+
+# Another user cannot claim someone else's receipts.
+other_user=new_user(0)
+try:
+    claim(other_user,session,event)
+    raise AssertionError("other user receipt must not be usable")
+except psycopg.Error as exc:
+    assert "focus_not_verified" in str(exc)
+assert pieces(other_user)==0
+
+# Rollover: 9 pieces + 1 verified reward -> 0 pieces and 1 ticket.
+with psycopg.connect(DSN) as conn:
+    conn.execute("UPDATE public.od_wallets SET pieces=9 WHERE user_id=%s",(reward_uid,))
+roll_session=uuid4()
+roll_event="verified-ad-"+str(uuid4())
+add_verified_receipts(reward_uid,roll_session,roll_event)
+roll=claim(reward_uid,roll_session,roll_event)
+assert roll["ticket_awarded"] is True
+assert pieces(reward_uid)==0 and balance(reward_uid)==1
+assert claim(reward_uid,roll_session,roll_event)["replayed"] is True
+assert balance(reward_uid)==1
+
+# Two simultaneous calls for one verified receipt grant once.
+parallel_uid=new_user(0)
+parallel_session=uuid4()
+parallel_event="verified-ad-"+str(uuid4())
+add_verified_receipts(parallel_uid,parallel_session,parallel_event)
+with ThreadPoolExecutor(max_workers=2) as pool:
+    claimed=list(pool.map(lambda _:claim(parallel_uid,parallel_session,parallel_event),range(2)))
+assert sorted(x["replayed"] for x in claimed)==[False,True]
+assert pieces(parallel_uid)==1
+
+print("PASS verified reward gating, ACL, replay, cross-user, rollover and concurrency")
