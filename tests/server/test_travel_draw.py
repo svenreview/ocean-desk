@@ -309,3 +309,31 @@ with psycopg.connect(DSN) as conn:
 assert focus_finish(fifty_user,fifty["session_id"])["verified"] is True
 assert query("SELECT count(*) FROM public.od_verified_focus WHERE user_id=%s",(fifty_user,))[0]==1
 print("PASS focus: server-time only, early block, 25/50, one-active, foreign user, replay and expiry")
+
+
+# Pause/reset is modelled as an authenticated server-side cancellation.
+cancel_user=new_user(0)
+cancel_start=focus_start(cancel_user,uuid4(),25)
+def focus_cancel(uid,session):
+    return query("SELECT public.od_server_focus_cancel(%s,%s)",(uid,session),role="service_role")[0]
+for role in ("anon","authenticated"):
+    assert not query("SELECT has_function_privilege(%s,'public.od_server_focus_cancel(uuid,uuid)','EXECUTE')",(role,))[0]
+try:
+    focus_cancel(other_user,cancel_start["session_id"])
+    raise AssertionError("cross-account cancellation should fail")
+except psycopg.Error as exc:
+    assert "focus_session_not_found" in str(exc)
+cancelled=focus_cancel(cancel_user,cancel_start["session_id"])
+assert cancelled["status"]=="expired" and cancelled["cancelled"] is True
+assert focus_cancel(cancel_user,cancel_start["session_id"])["cancelled"] is False
+with psycopg.connect(DSN) as conn:
+    conn.execute("UPDATE public.od_focus_attempts SET started_at=clock_timestamp()-interval '26 minutes' WHERE id=%s",(cancel_start["session_id"],))
+try:
+    focus_finish(cancel_user,cancel_start["session_id"])
+    raise AssertionError("cancelled focus must not later verify")
+except psycopg.Error as exc:
+    assert "focus_session_expired" in str(exc)
+assert query("SELECT count(*) FROM public.od_verified_focus WHERE session_id=%s",(cancel_start["session_id"],))[0]==0
+fresh=focus_start(cancel_user,uuid4(),25)
+assert fresh["status"]=="active" and fresh["session_id"]!=cancel_start["session_id"]
+print("PASS focus cancel: cross-user denied, idempotent, no receipt, fresh restart")
