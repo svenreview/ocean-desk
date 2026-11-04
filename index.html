@@ -176,7 +176,7 @@ function timerRender(){let elapsed=timerElapsed(),seconds=state.timerMin===0?ela
 window.addEventListener('od:restore-server-focus',event=>{
   const detail=event.detail||{};
   const minutes=Number(detail.minutes),elapsed=Number(detail.elapsed);
-  if(!state.entered||state.running||state.timerAccum>0||![25,50].includes(minutes)||
+  if(!state.entered||state.timerAccum>0||![25,50].includes(minutes)||
      !Number.isFinite(elapsed)||elapsed<0||elapsed>=minutes*60){
     window.dispatchEvent(new CustomEvent('od:restore-result',{detail:{ok:false}}));
     return;
