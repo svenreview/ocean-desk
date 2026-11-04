@@ -315,6 +315,7 @@ test('mobile focus controls and timer fit the narrow viewport',async({page})=>{
     expect(rect.left).toBeGreaterThanOrEqual(-1);
     expect(rect.right).toBeLessThanOrEqual(layout.width+1);
   }
+  await page.evaluate(()=>{state.timerStart=Date.now()-3000;timerRender()});
   await page.locator('#viewPause').click();
   await expect(page.locator('#timerStart')).toContainText('이어 집중하기');
   await page.locator('#viewWaves').click();
