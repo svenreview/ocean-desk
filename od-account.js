@@ -1,6 +1,7 @@
 // Ocean Desk account sync: opt-in read-only Supabase Auth connection.
 // This module is intentionally dormant until a publishable key and URL are configured.
 // No local demo balances are ever uploaded to Supabase.
+import {createWalletBootstrap} from './od-wallet-bootstrap.mjs';
 const config=window.OD_SUPABASE_CONFIG || {};
 const qs=id=>document.getElementById(id);
 const accountButton=qs('odAccountButton');
@@ -21,6 +22,7 @@ let client=null;
 let unsubscribe=null;
 let authenticatedId=null;
 let readVersion=0;
+let ensureWallet=null;
 const publishCollection=detail=>window.dispatchEvent(new CustomEvent('od:server-collection',{detail}));
 const setStatus=(message)=>{status.textContent=message};
 const clearServer=()=>{
@@ -44,6 +46,12 @@ if(!configured){
       const {data:{session},error}=await client.auth.getSession();
       return error?null:(session?.access_token||null);
     };
+    ensureWallet=createWalletBootstrap({
+      getAccessToken:()=>window.odAccountGetAccessToken(),
+      request:(...args)=>fetch(...args),
+      endpoint:config.url+'/functions/v1/od-wallet-initialize',
+      publishableKey:config.publishableKey
+    });
     const onAuth=async()=>{
       const {data:{user},error}=await client.auth.getUser();
       if(error||!user){
@@ -64,7 +72,7 @@ if(!configured){
     async function readServer(userId){
       const currentRead=++readVersion;
       clearServer();
-      const [walletResult,ownedResult,sessionsResult]=await Promise.all([
+      let [walletResult,ownedResult,sessionsResult]=await Promise.all([
         client.from('od_wallets').select('pieces,tickets').eq('user_id',userId).maybeSingle(),
         client.from('od_owned_environments').select('environment_id,acquired_at').eq('user_id',userId),
         client.from('od_focus_attempts').select('id,planned_minutes,started_at,completed_at,status').eq('user_id',userId).order('started_at',{ascending:false}).limit(10)
@@ -74,6 +82,15 @@ if(!configured){
         publishCollection({active:false});
         setStatus('서버 기록 조회에 실패했습니다. DB 스키마·권한 적용 상태를 확인해 주세요.');
         return;
+      }
+      if(!walletResult.data && config.autoInitializeWallet===true){
+        const initialized=await ensureWallet(userId);
+        if(currentRead!==readVersion||authenticatedId!==userId)return;
+        if(initialized.ok){
+          walletResult=await client.from('od_wallets').select('pieces,tickets').eq('user_id',userId).maybeSingle();
+          if(currentRead!==readVersion||authenticatedId!==userId)return;
+          if(walletResult.error){publishCollection({active:false});setStatus('서버 지갑 생성 후 조회에 실패했습니다.');return}
+        }else setStatus('서버 지갑 자동 준비 실패 · 수동 지갑 준비 또는 새로고침을 이용해 주세요.');
       }
       if(!walletResult.data)balance.textContent='서버 지갑이 아직 생성되지 않았습니다.';
       else balance.textContent='서버 퍼즐 '+walletResult.data.pieces+'/10 · 여행 티켓 '+walletResult.data.tickets+'장';
@@ -126,17 +143,11 @@ if(!configured){
       initWallet.disabled=true;
       setStatus('서버 지갑 초기화 요청 중입니다.');
       try {
-        const {data:{session},error:sessionError}=await client.auth.getSession();
-        if(sessionError||!session?.access_token)throw new Error('로그인이 필요합니다.');
-        const response=await fetch(config.url+'/functions/v1/od-wallet-initialize',{
-          method:'POST',
-          headers:{'authorization':'Bearer '+session.access_token,
-                   'apikey':config.publishableKey,'content-type':'application/json'},
-          body:'{}'
-        });
-        if(!response.ok)throw new Error('서버 지갑 초기화에 실패했습니다.');
         const {data:{user}}=await client.auth.getUser();
-        if(user?.id)await readServer(user.id);
+        if(!user?.id)throw new Error('로그인이 필요합니다.');
+        const result=await ensureWallet(user.id);
+        if(!result.ok)throw new Error('서버 지갑 준비에 실패했습니다: '+result.error);
+        if(authenticatedId===user.id)await readServer(user.id);
       }catch(e){setStatus('지갑 준비 실패: '+(e?.message||'오류'))}
       finally{initWallet.disabled=false}
     });
