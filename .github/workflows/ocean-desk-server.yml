@@ -7,6 +7,7 @@ on:
       - docs/ocean-wallet-initialize-rpc-draft.sql
       - docs/ocean-verified-puzzle-claim-draft.sql
       - docs/ocean-server-focus-session-draft.sql
+      - docs/ocean-server-focus-cancel-draft.sql
       - tests/server/**
       - .github/workflows/ocean-desk-server.yml
   workflow_dispatch:
@@ -52,5 +53,7 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f docs/ocean-verified-puzzle-claim-draft.sql
       - name: Apply server-clock focus session SQL
         run: psql -X -v ON_ERROR_STOP=1 -f docs/ocean-server-focus-session-draft.sql
+      - name: Apply server focus cancel SQL
+        run: psql -X -v ON_ERROR_STOP=1 -f docs/ocean-server-focus-cancel-draft.sql
       - name: Validate permissions, concurrency, idempotency and balances
         run: python tests/server/test_travel_draw.py
