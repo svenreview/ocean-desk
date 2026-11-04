@@ -350,3 +350,31 @@ assert not query("SELECT has_table_privilege('anon','public.od_focus_attempts','
 assert query("SELECT has_table_privilege('authenticated','public.od_focus_attempts','SELECT')")[0]
 assert not query("SELECT has_table_privilege('authenticated','public.od_focus_attempts','UPDATE')")[0]
 print("PASS account focus history isolation and read-only access")
+
+
+# Account-specific recovery status: server time remains authoritative.
+def focus_status(uid):
+    return query("SELECT public.od_server_focus_status(%s)",(uid,),role="service_role")[0]
+for role in ("anon","authenticated"):
+    assert not query("SELECT has_function_privilege(%s,'public.od_server_focus_status(uuid)','EXECUTE')",(role,))[0]
+assert query("SELECT has_function_privilege('service_role','public.od_server_focus_status(uuid)','EXECUTE')")[0]
+status_uid=new_user(0)
+assert focus_status(status_uid)=={"active":False}
+recover=focus_start(status_uid,uuid4(),25)
+found=focus_status(status_uid)
+assert found["active"] and found["session_id"]==recover["session_id"]
+assert found["planned_minutes"]==25 and found["remaining_seconds"]>0
+assert found["ready_to_finish"] is False
+assert focus_status(new_user(0))=={"active":False}
+with psycopg.connect(DSN) as conn:
+    conn.execute("UPDATE public.od_focus_attempts SET started_at=clock_timestamp()-interval '25 minutes 2 seconds' WHERE id=%s",(recover["session_id"],))
+ready=focus_status(status_uid)
+assert ready["ready_to_finish"] and ready["remaining_seconds"]==0
+assert focus_finish(status_uid,recover["session_id"])["verified"] is True
+assert focus_status(status_uid)=={"active":False}
+stale=focus_start(status_uid,uuid4(),50)
+with psycopg.connect(DSN) as conn:
+    conn.execute("UPDATE public.od_focus_attempts SET started_at=clock_timestamp()-interval '2 hours 3 minutes' WHERE id=%s",(stale["session_id"],))
+assert focus_status(status_uid)["expired"] is True
+assert query("SELECT count(*) FROM public.od_verified_focus WHERE session_id=%s",(stale["session_id"],))[0]==0
+print("PASS recovery: own active session, server remaining time, ready, completed and stale")
