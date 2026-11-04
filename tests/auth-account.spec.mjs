@@ -3,7 +3,8 @@ import {test,expect} from '@playwright/test';
 test.beforeEach(async({page})=>{
   await page.addInitScript(()=>{
     const settings={enabled:true,googleEnabled:true,serverFocusEnabled:false,
-      autoInitializeWallet:false,url:'https://staging.supabase.co',publishableKey:'sb_publishable_test'};
+      autoInitializeWallet:false,url:'https://staging.supabase.co',publishableKey:'sb_publishable_test',
+      allowedOrigins:['http://127.0.0.1:4173']};
     Object.defineProperty(window,'OD_SUPABASE_CONFIG',{
       configurable:true,get(){return settings},set(){/* ignore disabled production default in fixture */ }
     });
