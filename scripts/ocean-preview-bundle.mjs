@@ -1,8 +1,8 @@
 // Prepare a local-only static demo package; never deploy or modify remote services.
-import {copyFileSync,mkdirSync,writeFileSync,existsSync} from 'node:fs';
+import {copyFileSync,mkdirSync,writeFileSync,existsSync,readFileSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {inspectLocalPreview,readPreviewFiles} from './ocean-preview-readiness.mjs';
+import {inspectLocalPreview} from './ocean-preview-readiness.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 export const STATIC_PREVIEW_ASSETS=Object.freeze([
  'index.html','od-scenery.js','od-runtime-config.js','od-account.js',
@@ -33,12 +33,10 @@ export function buildPreviewBundle(outputDir){
  ,'utf8');
  return {ok:true,files:plan.files.length,output:target,deployActions:false};
 }
-function readFile(name){try{return requireRead(name)}catch{return undefined}}
-function requireRead(name){
+function readFile(name){
  const file=resolve(root,name);
- return existsSync(file)?importedRead(file):undefined;
+ return existsSync(file)?readFileSync(file,'utf8'):undefined;
 }
-import {readFileSync as importedRead} from 'node:fs';
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const result=buildPreviewBundle(process.argv[2]||resolve(root,'preview-package'));
  console.log(JSON.stringify(result));
