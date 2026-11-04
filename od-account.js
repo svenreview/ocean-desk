@@ -44,7 +44,7 @@ if(!configured){
     const onAuth=async()=>{
       const {data:{user},error}=await client.auth.getUser();
       if(error||!user){
-        clearServer();logout.disabled=true;refresh.disabled=true;initWallet.disabled=true;login.disabled=false;googleLogin.disabled=false;
+        clearServer();logout.disabled=true;refresh.disabled=true;initWallet.disabled=true;login.disabled=false;googleLogin.disabled=!config.googleEnabled;
         setStatus('로그인되지 않았습니다. 이메일로 로그인 링크를 받을 수 있습니다.');
         return;
       }
