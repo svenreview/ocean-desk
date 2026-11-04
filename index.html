@@ -173,9 +173,9 @@ function timerElapsed(){return state.timerAccum+(state.running&&state.timerStart
 function timerRender(){let elapsed=timerElapsed(),seconds=state.timerMin===0?elapsed:Math.max(0,state.timerMin*60-elapsed);$('timerText').textContent=`${pretty(Math.floor(seconds/60))}:${pretty(seconds%60)}`;$('timerDesc').textContent=state.running?'지금 이 순간, 나에게 집중하는 중':state.timerMin===0?'시간을 정하지 않고 자유롭게 집중하세요':'잠시 멈추고, 나만의 속도로.';let whole=state.completedSeconds;$('totalFocus').textContent=`${pretty(Math.floor(whole/3600))}시간 ${pretty(Math.floor(whole%3600/60))}분`;
  $('timerStart').innerHTML=state.running?'일시정지 <span>Ⅱ</span>':elapsed?'이어 집중하기 <span>→</span>':'집중 시작 <span>→</span>';
  if(state.running && state.timerMin>0 && elapsed>=state.timerMin*60 && !toastDone){toastDone=true;state.completedSeconds+=state.timerMin*60;setStorage('ocean-focus-seconds',state.completedSeconds);state.timerStart=null;state.running=false;state.timerAccum=0;world.act('idle');toast(`🎉 ${state.timerMin}분 집중을 완료하셨습니다!`);window.dispatchEvent(new CustomEvent('od:focus-complete',{detail:{minutes:state.timerMin,sessionId:'focus-'+Date.now()}}));timerRender()}}
-function pauseTimer(){state.timerAccum=timerElapsed();state.running=false;state.timerStart=null;timerRender()}
-$('timerStart').addEventListener('click',()=>{if(!mustEnter())return;if(state.running){pauseTimer();toast('잠깐 쉬어도 괜찮습니다.');return}toastDone=false;state.running=true;state.timerStart=Date.now();setMode('focus');world.act('read');timerRender();toast('집중을 시작했습니다. 파이팅!')});
-$('timerReset').addEventListener('click',()=>{if(state.timerAccum>0||state.running){const elapsed=timerElapsed();state.completedSeconds+=elapsed;setStorage('ocean-focus-seconds',state.completedSeconds)}state.running=false;state.timerStart=null;state.timerAccum=0;toastDone=false;timerRender();toast('타이머를 초기화했습니다. 지난 집중 시간은 저장되었습니다.')});
+function pauseTimer(){state.timerAccum=timerElapsed();state.running=false;state.timerStart=null;timerRender();window.dispatchEvent(new CustomEvent('od:timer-state',{detail:{action:'pause'}}))}
+$('timerStart').addEventListener('click',()=>{if(!mustEnter())return;if(state.running){pauseTimer();toast('잠깐 쉬어도 괜찮습니다.');return}toastDone=false;state.running=true;state.timerStart=Date.now();setMode('focus');world.act('read');timerRender();window.dispatchEvent(new CustomEvent('od:timer-state',{detail:{action:'start',minutes:state.timerMin,accumulated:state.timerAccum}}));toast('집중을 시작했습니다. 파이팅!')});
+$('timerReset').addEventListener('click',()=>{if(state.timerAccum>0||state.running){const elapsed=timerElapsed();state.completedSeconds+=elapsed;setStorage('ocean-focus-seconds',state.completedSeconds)}state.running=false;state.timerStart=null;state.timerAccum=0;toastDone=false;timerRender();window.dispatchEvent(new CustomEvent('od:timer-state',{detail:{action:'reset'}}));toast('타이머를 초기화했습니다. 지난 집중 시간은 저장되었습니다.')});
 document.querySelectorAll('[data-min]').forEach(b=>b.addEventListener('click',()=>{if(state.running)pauseTimer();state.timerMin=Number(b.dataset.min);state.timerStart=null;state.timerAccum=0;toastDone=false;document.querySelectorAll('[data-min]').forEach(x=>x.classList.toggle('active',x===b));timerRender()}));
 // Simple, entirely generated ocean-like filtered noise, started only after user gesture
 let audioCtx=null,source=null,filter=null,gain=null,modOsc=null,modGain=null;
@@ -735,6 +735,7 @@ document.getElementById('odMapToGallery').onclick=()=>{
 window.OD_SUPABASE_CONFIG={enabled:false}; // Enable only with explicitly configured URL + PUBLIC publishable key.
 </script>
 <script type="module" src="./od-account.js"></script>
+<script type="module" src="./od-focus-sync.js"></script>
 
 </body>
 </html>
