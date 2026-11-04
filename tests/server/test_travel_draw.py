@@ -125,3 +125,26 @@ for table in ("od_wallets","od_owned_environments","od_reward_claims","od_travel
     assert query("SELECT has_table_privilege('authenticated', %s, 'SELECT')",("public."+table,))[0]
 
 print("PASS RLS: own records visible, other users denied, unauthenticated claim hidden, anon denied")
+
+
+# Idempotent wallet initialization cannot reset earned tickets or create balances.
+new_uid=uuid4()
+with psycopg.connect(DSN) as conn:
+    conn.execute("INSERT INTO auth.users(id) VALUES (%s)",(new_uid,))
+created=query("SELECT public.od_server_initialize_wallet(%s)",(new_uid,),role="service_role")[0]
+assert created["pieces"]==0 and created["tickets"]==0
+assert balance(new_uid)==0
+with psycopg.connect(DSN) as conn:
+    conn.execute("UPDATE public.od_wallets SET pieces=7, tickets=3 WHERE user_id=%s",(new_uid,))
+reopened=query("SELECT public.od_server_initialize_wallet(%s)",(new_uid,),role="service_role")[0]
+assert reopened["pieces"]==7 and reopened["tickets"]==3
+assert balance(new_uid)==3
+assert not query("SELECT has_function_privilege('anon','public.od_server_initialize_wallet(uuid)','EXECUTE')")[0]
+assert not query("SELECT has_function_privilege('authenticated','public.od_server_initialize_wallet(uuid)','EXECUTE')")[0]
+assert query("SELECT has_function_privilege('service_role','public.od_server_initialize_wallet(uuid)','EXECUTE')")[0]
+try:
+    query("SELECT public.od_server_initialize_wallet(%s)",(uuid4(),),role="service_role")
+    raise AssertionError("Missing auth.users FK should reject unknown user")
+except psycopg.Error as exc:
+    assert exc.sqlstate == "23503", str(exc)
+print("PASS wallet initialization: idempotent, no reset, ACL and valid user FK")
