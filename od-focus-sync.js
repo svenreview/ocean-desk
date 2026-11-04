@@ -1,9 +1,10 @@
 // Ocean Desk 2.0 — opt-in server focus lifecycle adapter.
 // This module never changes the legacy timer or generates puzzle rewards.
 // Server focus is disabled by default; only manually enabled staging can call it.
-const config=window.OD_SUPABASE_CONFIG||{};
-const enabled=config.enabled===true&&config.serverFocusEnabled===true&&
-  /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(config.url||'');
+import {validateRuntimeConfig} from './od-config-validator.mjs';
+const validation=validateRuntimeConfig(window.OD_SUPABASE_CONFIG,window.location.origin);
+const config=validation.config;
+const enabled=validation.ok&&config.enabled===true&&config.serverFocusEnabled===true;
 const state={pending:null,session:null,epoch:0,needsReset:false};
 const $=id=>document.getElementById(id);
 const status=$('odServerFocusStatus');
