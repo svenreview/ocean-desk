@@ -473,6 +473,7 @@ oceanCanvas.addEventListener('pointercancel',()=>dragOcean=null);
  #oceanOverlay #oceanFoot{bottom:min(44dvh,290px)}
 }
 </style>
+<script src="./od-scenery.js"></script>
 <!-- Ocean Desk 2.0 focus-gallery MVP (test-only local rewards) -->
 <style>
 #odGallery,#odReward{border:0;padding:0;background:transparent;color:#1a3b47;max-width:min(92vw,860px);width:100%;max-height:92dvh}
@@ -495,7 +496,7 @@ oceanCanvas.addEventListener('pointercancel',()=>dragOcean=null);
 .od-pieces{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:min(100%,300px);margin:7px auto}
 .od-piece{height:43px;border:1px solid #c6d8d5;background:#eaf0ef;border-radius:8px;display:grid;place-items:center;color:#a2b9b6}
 .od-piece.earned{background:#b1dbd2;color:#174e57;border-color:#70aea3}
-#oceanOverlay.od-bali #photoView{background-image:linear-gradient(165deg,#bfe6fa38,#124d6373),url("https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1800&q=85")}
+#oceanOverlay.od-bali #photoView{background-image:linear-gradient(165deg,#bfe6fa38,#124d6373)}
 @media(max-width:650px){.od-hero{grid-template-columns:1fr}.od-photo{min-height:190px}.od-content{padding:20px}.od-content h2{font-size:23px}}
 </style>
 <dialog id="odGallery" aria-label="나의 갤러리"><div class="od-card">
@@ -508,7 +509,7 @@ oceanCanvas.addEventListener('pointercancel',()=>dragOcean=null);
    <label>집중 시간</label><div class="od-choice"><button id="od25" aria-pressed="true">25분</button><button id="od50" aria-pressed="false">50분</button></div>
    <label>배경 사운드</label><div class="od-choice"><button id="odWaves" aria-pressed="true">파도 소리</button><button id="odMute" aria-pressed="false">무음</button></div>
    <button id="odStudy" type="button" class="od-main">이 공간에서 공부하기 →</button>
-   <p class="od-muted">기존 뽀모도로·파도 소리 엔진을 그대로 사용합니다. 현재 풍경은 임시 이미지입니다.</p>
+   <p class="od-muted">지역별 풍경은 직접 제작한 일러스트입니다. 실제 여행지 사진이 아닙니다. 기존 타이머와 파도 소리는 그대로 사용합니다.</p>
   </div>
  </div>
 </div></dialog>
@@ -547,13 +548,17 @@ const scenes=[
 const regions=[{id:'bali',name:'발리',emoji:'🌴'},{id:'jeju',name:'제주',emoji:'🌊'},{id:'santorini',name:'산토리니',emoji:'🏛️'}];
 function sceneById(id){return scenes.find(s=>s.id===id)}
 function availableScenes(){return ['santorini-terrace','bali-ocean-cafe',...(serverCollection?.active?serverCollection.owned:read().owned)]}
-function sceneBackground(s){return s.id==='bali-ocean-cafe'?'linear-gradient(165deg,#1546531f,#082d3f77),url("https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1800&q=85")':'linear-gradient(140deg,'+s.color+',#153f51)'}
+function sceneBackground(s){
+ const art=window.OD_SCENERY?.background(s.id);
+ return art?'linear-gradient(165deg,#0d2e3b12,#0d2e3b42),'+art:'linear-gradient(140deg,'+s.color+',#153f51)';
+}
 function showScene(id){
  const s=sceneById(id);if(!s||!availableScenes().includes(id))return;
  selectedScene=id;
  el('odSceneTitle').textContent=s.name;
  el('odSceneDesc').textContent=s.desc;
  el('odScenePhoto').style.backgroundImage=sceneBackground(s);
+ el('odScenePhoto').setAttribute('aria-label',s.name+' 일러스트 풍경');
  el('odScenePhoto').querySelector('span').textContent=s.region.toUpperCase()+' · '+s.rank+' · 획득 완료';
 }
 function clearStudyScene(){
@@ -568,9 +573,9 @@ function applyStudyScene(id){
  if(!s)return;
  window.odActiveStudyScene={id:s.id,name:s.name,desc:s.desc};
  el('photoView').setAttribute('aria-label',s.name+' 풍경 미리보기');
- // Keep the existing 3D view and timer engine unchanged.
- if(id==='bali-ocean-cafe')el('oceanOverlay').classList.add('od-bali');
- else {el('oceanOverlay').classList.add('od-custom-scene');el('photoView').style.backgroundImage=sceneBackground(s)}
+ // The selected artwork is local; 3D controls and timer engine remain unchanged.
+ el('oceanOverlay').classList.add('od-custom-scene');
+ el('photoView').style.backgroundImage=sceneBackground(s);
  el('oceanSeatLabel').textContent=s.name+' · 집중 공간';
  el('oceanSeatTag').textContent=s.region.toUpperCase()+' · FOCUS';
  setOceanMode(oceanState.view);
