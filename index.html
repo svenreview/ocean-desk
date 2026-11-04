@@ -772,7 +772,7 @@ document.getElementById('odMapToGallery').onclick=()=>{
  <p class="od-account-note">현재 브라우저의 테스트 퍼즐·여행 티켓은 실제 계정 기록과 완전히 분리되어 있습니다. 계정 데이터의 읽기 전용 조회만 지원하며, 직접 수정·가져오기는 허용되지 않습니다.</p>
 </div></dialog>
 <script>
-window.OD_SUPABASE_CONFIG={enabled:false,googleEnabled:false,serverFocusEnabled:false}; // Enable only with explicitly configured URL + PUBLIC publishable key.
+window.OD_SUPABASE_CONFIG={enabled:false,googleEnabled:false,serverFocusEnabled:false,autoInitializeWallet:false}; // Enable only with explicitly configured URL + PUBLIC publishable key.
 </script>
 <script type="module" src="./od-account.js"></script>
 <script type="module" src="./od-focus-sync.js"></script>
