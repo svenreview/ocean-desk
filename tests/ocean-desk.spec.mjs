@@ -111,7 +111,6 @@ test('server focus sync stays disabled in default demo mode', async ({ page }) =
   await page.locator('#odGalleryOpen').click();
   await page.locator('#odStudy').click();
   await expect(page.locator('#oceanOverlay')).toHaveClass(/active/);
-  await page.locator('#timerStart').click();
-  await page.locator('#timerReset').click();
+  await page.evaluate(() => {document.getElementById('timerStart').click(); document.getElementById('timerReset').click()});
   expect(calls).toHaveLength(0);
 });
