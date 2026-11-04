@@ -65,13 +65,13 @@ if(!configured){
         publishCollection({active:false});
         clearServer();logout.disabled=true;refresh.disabled=true;initWallet.disabled=true;login.disabled=false;googleLogin.disabled=!config.googleEnabled;
         setStatus('로그인되지 않았습니다. 이메일로 로그인 링크를 받을 수 있습니다.');
-        window.dispatchEvent(new CustomEvent('od:account-session',{detail:{loggedIn:false}}));
+        window.dispatchEvent(new CustomEvent('od:account-session',{detail:{loggedIn:false,userId:null}}));
         return;
       }
       authenticatedId=user.id;
       login.disabled=true;googleLogin.disabled=true;logout.disabled=false;refresh.disabled=false;initWallet.disabled=false;
       setStatus('로그인: '+(user.email || '사용자')+' · 서버 기록 읽기 전용');
-      window.dispatchEvent(new CustomEvent('od:account-session',{detail:{loggedIn:true}}));
+      window.dispatchEvent(new CustomEvent('od:account-session',{detail:{loggedIn:true,userId:user.id}}));
       await readServer(user.id);
     };
     async function readServer(userId){
@@ -162,14 +162,19 @@ if(!configured){
       else await onAuth();
     });
     refresh.addEventListener('click',()=>onAuth());
-    const authListener=client.auth.onAuthStateChange(()=>{
-      // Clear previous account data immediately, before any async getUser resolves.
+    const authListener=client.auth.onAuthStateChange((event,session)=>{
+      // Token renewal for the SAME user is not a logout and must not interrupt
+      // an active focus session or expose another user's collection.
+      const incomingId=session?.user?.id||null;
+      const identityChanged=event==='SIGNED_OUT'||(authenticatedId!==null&&incomingId!==authenticatedId);
       authEpoch.invalidate();
       ++readVersion;
-      authenticatedId=null;
-      publishCollection({active:false});
-      clearServer();
-      window.dispatchEvent(new CustomEvent('od:account-session',{detail:{loggedIn:false}}));
+      if(identityChanged){
+        authenticatedId=null;
+        publishCollection({active:false});
+        clearServer();
+        window.dispatchEvent(new CustomEvent('od:account-session',{detail:{loggedIn:false,userId:null}}));
+      }
       queueMicrotask(()=>{void onAuth()});
     });
     unsubscribe=()=>authListener.data.subscription.unsubscribe();
