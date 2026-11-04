@@ -98,3 +98,20 @@ test('account module defaults to disabled and never imports demo rewards into se
   const raw = await page.evaluate(() => localStorage.getItem('od-mvp-local-rewards-v1'));
   expect(raw).toBeNull();
 });
+
+test('server focus sync stays disabled in default demo mode', async ({ page }) => {
+  const calls=[];
+  page.on('request',request=>{
+    if(request.url().includes('/functions/v1/od-focus-session'))calls.push(request.url());
+  });
+  await page.goto('http://127.0.0.1:4173/');
+  await page.locator('#odAccountButton').click();
+  await expect(page.locator('#odServerFocusStatus')).toContainText('비활성화');
+  await page.locator('#odAccountClose').click();
+  await page.locator('#odGalleryOpen').click();
+  await page.locator('#odStudy').click();
+  await expect(page.locator('#oceanOverlay')).toHaveClass(/active/);
+  await page.locator('#timerStart').click();
+  await page.locator('#timerReset').click();
+  expect(calls).toHaveLength(0);
+});
