@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('Bali gallery enters original 25-minute timer with waves and awards one test puzzle', async ({ page }) => {
   await page.goto('http://127.0.0.1:4173/');
-  await page.getByRole('button', { name: '갤러리', exact: true }).click();
+  await page.locator('#odGalleryOpen').click();
   await expect(page.getByRole('dialog', { name: '나의 갤러리' })).toBeVisible();
   await page.getByRole('button', { name: '이 공간에서 공부하기' }).click();
   await expect(page.locator('#oceanOverlay')).toHaveClass(/active/);
@@ -29,7 +29,7 @@ test('ten unique test sessions produce ticket; region unlock has no duplicates',
     await page.getByRole('button', { name: '테스트 퍼즐 1조각 받기' }).click();
     await page.locator('#odRewardClose').click();
   }
-  await page.getByRole('button', { name: '갤러리', exact: true }).click();
+  await page.locator('#odGalleryOpen').click();
   await page.getByRole('button', { name: /세계지도/ }).click();
   await expect(page.locator('#odMapTickets')).toContainText('1장');
   await page.locator('#odRegions button').filter({ hasText: '제주' }).click();
@@ -39,7 +39,7 @@ test('ten unique test sessions produce ticket; region unlock has no duplicates',
   expect(initial.owned).toHaveLength(1);
   expect(initial.owned[0]).toMatch(/^jeju-/);
   await page.reload();
-  await page.getByRole('button', { name: '갤러리', exact: true }).click();
+  await page.locator('#odGalleryOpen').click();
   await expect(page.locator('#odGalleryCount')).toContainText('3 / 9');
   await page.getByRole('button', { name: /세계지도/ }).click();
   await expect(page.locator('#odMapTickets')).toContainText('0장');
