@@ -321,3 +321,50 @@ test('mobile focus controls and timer fit the narrow viewport',async({page})=>{
   await page.locator('#viewWaves').click();
   await expect(page.locator('#viewWaves')).toHaveAttribute('aria-pressed','false');
 });
+
+
+test('all nine regions and scene variants use distinct offline SVG artwork',async({page})=>{
+ await page.goto('http://127.0.0.1:4173/');
+ const result=await page.evaluate(()=>{
+  const ids=['santorini-terrace','santorini-sunset','santorini-night',
+   'bali-ocean-cafe','bali-sunset','bali-forest',
+   'jeju-coast','jeju-forest','jeju-rain'];
+  const artwork=ids.map(id=>window.OD_SCENERY?.background(id));
+  return {ids,artwork};
+ });
+ expect(result.artwork).toHaveLength(9);
+ expect(new Set(result.artwork).size).toBe(9);
+ for(const art of result.artwork){
+  expect(art).toContain('data:image/svg+xml');
+  expect(art).not.toContain('https://');
+  const code=decodeURIComponent(art.slice(art.indexOf(',')+1,-2));
+  expect(code).toContain('<svg');
+  expect(code).toContain('</svg>');
+ }
+});
+
+test('gallery preview and active study scenery show the matching local illustration on mobile',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('http://127.0.0.1:4173/');
+ await page.evaluate(()=>localStorage.setItem('od-mvp-local-rewards-v1',JSON.stringify({
+  pieces:0,tickets:0,claims:[],owned:['jeju-forest','bali-sunset']
+ })));
+ await page.reload();
+ await page.locator('#odGalleryOpen').click();
+ await page.locator('#odFrames button').filter({hasText:'제주 숲속서재'}).click();
+ const jeju=await page.locator('#odScenePhoto').evaluate(el=>el.style.backgroundImage);
+ expect(jeju).toContain('data:image/svg+xml');
+ await page.locator('#odFrames button').filter({hasText:'발리 선셋룸'}).click();
+ const bali=await page.locator('#odScenePhoto').evaluate(el=>el.style.backgroundImage);
+ expect(bali).toContain('data:image/svg+xml');
+ expect(bali).not.toBe(jeju);
+ await page.locator('#odStudy').click();
+ await expect(page.locator('#oceanSeatLabel')).toContainText('발리 선셋룸');
+ await expect(page.locator('#photoView')).toHaveAttribute('aria-label',/발리 선셋룸/);
+ const active=await page.locator('#photoView').evaluate(el=>el.style.backgroundImage);
+ expect(active).toBe(bali);
+ const before=await page.evaluate(()=>({running:state.running,minutes:state.timerMin,audio:state.audioOn}));
+ await page.locator('#viewRead').click();
+ await page.locator('#viewFocus').click();
+ expect(await page.evaluate(()=>({running:state.running,minutes:state.timerMin,audio:state.audioOn}))).toEqual(before);
+});
