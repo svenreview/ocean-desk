@@ -46,10 +46,12 @@ if(!configured){
       if(error||!user){
         clearServer();logout.disabled=true;refresh.disabled=true;initWallet.disabled=true;login.disabled=false;googleLogin.disabled=!config.googleEnabled;
         setStatus('로그인되지 않았습니다. 이메일로 로그인 링크를 받을 수 있습니다.');
+        window.dispatchEvent(new CustomEvent('od:account-session',{detail:{loggedIn:false}}));
         return;
       }
       login.disabled=true;googleLogin.disabled=true;logout.disabled=false;refresh.disabled=false;initWallet.disabled=false;
       setStatus('로그인: '+(user.email || '사용자')+' · 서버 기록 읽기 전용');
+      window.dispatchEvent(new CustomEvent('od:account-session',{detail:{loggedIn:true}}));
       await readServer(user.id);
     };
     async function readServer(userId){
