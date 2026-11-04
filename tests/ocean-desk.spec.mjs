@@ -449,6 +449,7 @@ test('mobile controls reset on leaving study and are not displayed on desktop',a
  await page.locator('#odMobileControlsToggle').click();
  await expect(page.locator('#viewSide')).toBeHidden();
  await page.locator('#oceanFoot').getByRole('button',{name:'정면'}).click();
+ await page.locator('#odMobileControlsToggle').click();
  await page.locator('#returnCafeBottom').click();
  await expect(page.locator('#oceanOverlay')).not.toHaveClass(/active/);
  await page.locator('#timerReset').click(); // end the previous focus attempt before entering another room
