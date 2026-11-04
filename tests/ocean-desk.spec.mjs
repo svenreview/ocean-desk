@@ -140,3 +140,28 @@ test('explicit server recovery event restores existing timer without awarding re
   await expect(page.locator('#timerStart')).toContainText('일시정지');
   await expect(page.locator('#odAccountButton')).toBeAttached();
 });
+
+test('server collection snapshot never merges or spends local demo progress', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173/');
+  await page.evaluate(()=>{
+    localStorage.setItem('od-mvp-local-rewards-v1',JSON.stringify({pieces:6,tickets:5,owned:['jeju-forest'],claims:[]}));
+    window.dispatchEvent(new CustomEvent('od:server-collection',{detail:{
+      active:true,userId:'test-user',ready:true,pieces:3,tickets:2,owned:['bali-sunset']
+    }}));
+  });
+  await page.locator('#odGalleryOpen').click();
+  await expect(page.locator('#odServerCollectionMode')).toContainText('서버 컬렉션');
+  await expect(page.locator('#odGalleryCount')).toContainText('서버 계정');
+  await expect(page.locator('#odGalleryCount')).toContainText('3 / 9');
+  await expect(page.locator('#odFrames button').filter({hasText:'발리 선셋룸'})).toBeEnabled();
+  await expect(page.locator('#odFrames button').filter({hasText:'제주 숲속서재'})).toBeDisabled();
+  await page.locator('#odMapOpen').click();
+  await expect(page.locator('#odMapTickets')).toContainText('2장');
+  await expect(page.locator('#odRegions button').filter({hasText:'발리'})).toBeDisabled();
+  const untouched=await page.evaluate(()=>JSON.parse(localStorage.getItem('od-mvp-local-rewards-v1')));
+  expect(untouched).toMatchObject({pieces:6,tickets:5,owned:['jeju-forest']});
+  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('od:server-collection',{detail:{active:false}})));
+  await expect(page.locator('#odMapTickets')).toContainText('5장');
+  await expect(page.locator('#odRegions button').filter({hasText:'발리'})).toBeEnabled();
+  await expect(page.locator('#odGalleryCount')).toContainText('로컬 데모');
+});
