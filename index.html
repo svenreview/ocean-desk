@@ -463,7 +463,8 @@ oceanCanvas.addEventListener('pointercancel',()=>dragOcean=null);
 </style>
 <dialog id="odGallery" aria-label="나의 갤러리"><div class="od-card">
  <div class="od-head"><strong>OCEAN DESK · MY GALLERY</strong><button class="od-close" id="odGalleryClose" type="button" aria-label="닫기">×</button></div>
- <div id="odCollectionNav" class="od-collection-nav"><button id="odMapOpen" class="od-map-link" type="button">🌍 세계지도 · 여행 탐험</button><span id="odGalleryCount" aria-live="polite">내 컬렉션</span></div><div class="od-collection-frames" id="odFrames" aria-label="획득한 집중 공간"></div><div class="od-hero">
+ <p id="odServerCollectionMode" role="status" aria-live="polite" style="padding:0 16px;font-size:12px;color:#537e84">브라우저 로컬 테스트 컬렉션 · 서버 계정과 별도</p>
+<div id="odCollectionNav" class="od-collection-nav"><button id="odMapOpen" class="od-map-link" type="button">🌍 세계지도 · 여행 탐험</button><span id="odGalleryCount" aria-live="polite">내 컬렉션</span></div><div class="od-collection-frames" id="odFrames" aria-label="획득한 집중 공간"></div><div class="od-hero">
   <div class="od-photo" id="odScenePhoto" role="img" aria-label="선택한 공간 미리보기"><span>발리 오션카페 · 테스트용 기본 해금</span></div>
   <div class="od-content">
    <h2 id="odSceneTitle">발리 오션카페</h2><p id="odSceneDesc">푸른 바다와 함께 집중하세요. 이 공간은 MVP 테스트를 위해 누구나 입장할 수 있습니다.</p>
@@ -492,6 +493,7 @@ const el=id=>document.getElementById(id);
 const key='od-mvp-local-rewards-v1';
 const gallery=el('odGallery'), reward=el('odReward');
 let minutes=25,waves=true,currentSession=null,selectedScene='bali-ocean-cafe';
+let serverCollection=null; // Authenticated read-only snapshot; NEVER copied to localStorage.
 
 const scenes=[
 {id:'santorini-terrace',region:'santorini',name:'산토리니 오션테라스',rank:'기본',color:'#b4d4df',desc:'지중해의 햇살이 머무는 오션테라스.'},
@@ -506,7 +508,7 @@ const scenes=[
 ];
 const regions=[{id:'bali',name:'발리',emoji:'🌴'},{id:'jeju',name:'제주',emoji:'🌊'},{id:'santorini',name:'산토리니',emoji:'🏛️'}];
 function sceneById(id){return scenes.find(s=>s.id===id)}
-function availableScenes(){return ['santorini-terrace','bali-ocean-cafe',...read().owned]}
+function availableScenes(){return ['santorini-terrace','bali-ocean-cafe',...(serverCollection?.active?serverCollection.owned:read().owned)]}
 function sceneBackground(s){return s.id==='bali-ocean-cafe'?'linear-gradient(165deg,#1546531f,#082d3f77),url("https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1800&q=85")':'linear-gradient(140deg,'+s.color+',#153f51)'}
 function showScene(id){
  const s=sceneById(id);if(!s||!availableScenes().includes(id))return;
@@ -550,19 +552,19 @@ function renderFrames(){
    button.onclick=()=>{showScene(s.id);renderFrames()};
    root.appendChild(button);
  }
- el('odGalleryCount').textContent=owned.length+' / '+scenes.length+' 공간';
+ el('odGalleryCount').textContent=(serverCollection?.active?'서버 계정 · ':'로컬 데모 · ')+owned.length+' / '+scenes.length+' 공간';
  showScene(selectedScene);
 }
 function renderMap(){
  const w=read(),owned=availableScenes();
- el('odMapTickets').textContent='🎟 여행 티켓 '+w.tickets+'장';
+ el('odMapTickets').textContent=(serverCollection?.active?'서버 · ':'로컬 데모 · ')+'🎟 여행 티켓 '+w.tickets+'장';
  el('odMapTotal').textContent=owned.length+' / '+scenes.length+' 공간 수집';
  const root=el('odRegions');root.replaceChildren();
  regions.forEach(r=>{
   const regionScenes=scenes.filter(s=>s.region===r.id),remaining=regionScenes.filter(s=>!owned.includes(s.id));
   const btn=document.createElement('button');btn.type='button';
   btn.className='od-region'+(remaining.length===0?' od-complete':'');
-  btn.disabled=!w.tickets||!remaining.length;
+  btn.disabled=Boolean(serverCollection?.active)||!w.tickets||!remaining.length;
   const ico=document.createElement('span');ico.className='od-region-emoji';ico.textContent=r.emoji;
   const name=document.createElement('strong');name.textContent=r.name;
   const status=document.createElement('span');status.className='od-region-progress';
@@ -572,6 +574,7 @@ function renderMap(){
  });
 }
 function drawRegion(region){
+ if(serverCollection?.active){el('odTravelResult').classList.add('visible');el('odTravelResult').textContent='서버 계정의 여행 티켓은 이 데모 화면에서 사용할 수 없습니다. 서버 검증 후 이용 가능합니다.';return;}
  const w=read(),owned=availableScenes(),pool=scenes.filter(s=>s.region===region&&!owned.includes(s.id));
  if(!pool.length||w.tickets<1){renderMap();return;}
  // Unique only; uniform among remaining scenes for MVP (no rarity weights).
@@ -584,13 +587,25 @@ function drawRegion(region){
  result.textContent='🎉 새로운 공간 획득: '+selected.name+' ('+selected.rank+') · 갤러리에 추가되었습니다.';
  renderMap();renderFrames();toast(selected.name+'을(를) 획득했습니다!');
 }
+window.addEventListener('od:server-collection',event=>{
+ const incoming=event.detail||{};
+ if(incoming.active===true && Array.isArray(incoming.owned) && Number.isInteger(incoming.pieces) && Number.isInteger(incoming.tickets)){
+   serverCollection={active:true,pieces:Math.max(0,Math.min(9,incoming.pieces)),tickets:Math.max(0,incoming.tickets),owned:incoming.owned.filter(id=>scenes.some(x=>x.id===id))};
+ }else serverCollection=null;
+ // Do not mutate local demo progress or award currency on account transitions.
+ if(!availableScenes().includes(selectedScene))selectedScene='bali-ocean-cafe';
+ renderFrames();renderMap();renderReward();
+ el('odServerCollectionMode').textContent=serverCollection?.active?
+   'Google 계정의 서버 컬렉션 · 읽기 전용 (추첨·보상 비활성)':
+   '브라우저 로컬 테스트 컬렉션 · 서버 계정과 별도';
+});
 window.odTravelDemo={renderMap,renderFrames};
 renderFrames();
 
-function read(){try{const x=JSON.parse(localStorage.getItem(key)||'{}');return {pieces:Math.max(0,Math.min(9,Number(x.pieces)||0)),tickets:Math.max(0,Math.floor(Number(x.tickets)||0)),claims:Array.isArray(x.claims)?x.claims:[],owned:Array.isArray(x.owned)?x.owned.filter(v=>typeof v==='string'):[]}}catch{return {pieces:0,tickets:0,claims:[],owned:[]}}}
-function save(x){try{localStorage.setItem(key,JSON.stringify(x))}catch{}}
+function read(){if(serverCollection?.active)return {pieces:serverCollection.pieces,tickets:serverCollection.tickets,claims:[],owned:serverCollection.owned};try{const x=JSON.parse(localStorage.getItem(key)||'{}');return {pieces:Math.max(0,Math.min(9,Number(x.pieces)||0)),tickets:Math.max(0,Math.floor(Number(x.tickets)||0)),claims:Array.isArray(x.claims)?x.claims:[],owned:Array.isArray(x.owned)?x.owned.filter(v=>typeof v==='string'):[]}}catch{return {pieces:0,tickets:0,claims:[],owned:[]}}}
+function save(x){if(serverCollection?.active)return;try{localStorage.setItem(key,JSON.stringify(x))}catch{}}
 function choose(a,b,v){el(a).setAttribute('aria-pressed',String(v));el(b).setAttribute('aria-pressed',String(!v))}
-function renderReward(){let x=read();el('odProgress').textContent='퍼즐 '+x.pieces+' / 10';el('odTickets').textContent='보유 여행 티켓 '+x.tickets+'장';el('odPieces').replaceChildren(...Array.from({length:10},(_,i)=>{let d=document.createElement('span');d.className='od-piece'+(i<x.pieces?' earned':'');d.textContent=i<x.pieces?'◆':'◇';return d}));el('odClaim').disabled=!currentSession||x.claims.includes(currentSession)}
+function renderReward(){let x=read();el('odProgress').textContent='퍼즐 '+x.pieces+' / 10';el('odTickets').textContent='보유 여행 티켓 '+x.tickets+'장';el('odPieces').replaceChildren(...Array.from({length:10},(_,i)=>{let d=document.createElement('span');d.className='od-piece'+(i<x.pieces?' earned':'');d.textContent=i<x.pieces?'◆':'◇';return d}));el('odClaim').disabled=Boolean(serverCollection?.active)||!currentSession||x.claims.includes(currentSession);el('odClaim').textContent=serverCollection?.active?'서버 계정 보상은 검증 후 지급':'테스트 퍼즐 1조각 받기'}
 el('odGalleryOpen').onclick=()=>{renderFrames();gallery.showModal()};
 el('odGalleryClose').onclick=()=>gallery.close();
 el('od25').onclick=()=>{minutes=25;choose('od25','od50',true)};
@@ -621,7 +636,7 @@ window.addEventListener('od:focus-complete',e=>{
  reward.showModal();
 });
 el('odClaim').onclick=()=>{
- if(!currentSession)return;
+ if(serverCollection?.active||!currentSession)return;
  let x=read();if(x.claims.includes(currentSession))return;
  x.claims.push(currentSession);
  if(x.pieces===9){x.pieces=0;x.tickets++}else{x.pieces++}
