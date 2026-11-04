@@ -173,6 +173,24 @@ function timerElapsed(){return state.timerAccum+(state.running&&state.timerStart
 function timerRender(){let elapsed=timerElapsed(),seconds=state.timerMin===0?elapsed:Math.max(0,state.timerMin*60-elapsed);$('timerText').textContent=`${pretty(Math.floor(seconds/60))}:${pretty(seconds%60)}`;$('timerDesc').textContent=state.running?'지금 이 순간, 나에게 집중하는 중':state.timerMin===0?'시간을 정하지 않고 자유롭게 집중하세요':'잠시 멈추고, 나만의 속도로.';let whole=state.completedSeconds;$('totalFocus').textContent=`${pretty(Math.floor(whole/3600))}시간 ${pretty(Math.floor(whole%3600/60))}분`;
  $('timerStart').innerHTML=state.running?'일시정지 <span>Ⅱ</span>':elapsed?'이어 집중하기 <span>→</span>':'집중 시작 <span>→</span>';
  if(state.running && state.timerMin>0 && elapsed>=state.timerMin*60 && !toastDone){toastDone=true;state.completedSeconds+=state.timerMin*60;setStorage('ocean-focus-seconds',state.completedSeconds);state.timerStart=null;state.running=false;state.timerAccum=0;world.act('idle');toast(`🎉 ${state.timerMin}분 집중을 완료하셨습니다!`);window.dispatchEvent(new CustomEvent('od:focus-complete',{detail:{minutes:state.timerMin,sessionId:'focus-'+Date.now()}}));timerRender()}}
+window.addEventListener('od:restore-server-focus',event=>{
+  const detail=event.detail||{};
+  const minutes=Number(detail.minutes),elapsed=Number(detail.elapsed);
+  if(!state.entered||state.running||state.timerAccum>0||![25,50].includes(minutes)||
+     !Number.isFinite(elapsed)||elapsed<0||elapsed>=minutes*60){
+    window.dispatchEvent(new CustomEvent('od:restore-result',{detail:{ok:false}}));
+    return;
+  }
+  state.timerMin=minutes;
+  state.timerAccum=Math.max(0,Math.floor(elapsed));
+  state.timerStart=Date.now();
+  state.running=true;
+  toastDone=false;
+  document.querySelectorAll('[data-min]').forEach(b=>b.classList.toggle('active',Number(b.dataset.min)===minutes));
+  setMode('focus');world.act('read');timerRender();
+  toast('서버 집중 기록을 이어서 시작했습니다.');
+  window.dispatchEvent(new CustomEvent('od:restore-result',{detail:{ok:true}}));
+});
 function pauseTimer(){state.timerAccum=timerElapsed();state.running=false;state.timerStart=null;timerRender();window.dispatchEvent(new CustomEvent('od:timer-state',{detail:{action:'pause'}}))}
 $('timerStart').addEventListener('click',()=>{if(!mustEnter())return;if(state.running){pauseTimer();toast('잠깐 쉬어도 괜찮습니다.');return}toastDone=false;state.running=true;state.timerStart=Date.now();setMode('focus');world.act('read');timerRender();window.dispatchEvent(new CustomEvent('od:timer-state',{detail:{action:'start',minutes:state.timerMin,accumulated:state.timerAccum}}));toast('집중을 시작했습니다. 파이팅!')});
 $('timerReset').addEventListener('click',()=>{if(state.timerAccum>0||state.running){const elapsed=timerElapsed();state.completedSeconds+=elapsed;setStorage('ocean-focus-seconds',state.completedSeconds)}state.running=false;state.timerStart=null;state.timerAccum=0;toastDone=false;timerRender();window.dispatchEvent(new CustomEvent('od:timer-state',{detail:{action:'reset'}}));toast('타이머를 초기화했습니다. 지난 집중 시간은 저장되었습니다.')});
@@ -731,7 +749,11 @@ document.getElementById('odMapToGallery').onclick=()=>{
  <div class="od-account-server"><h3 id="odServerBalance">서버 퍼즐·티켓: 로그인 후 조회</h3>
  <ul id="odServerScenes"></ul>
 <h3>최근 집중 기록</h3><ul id="odServerSessions"></ul></div>
- <p id="odServerFocusStatus" class="od-account-note" role="status" aria-live="polite">서버 집중 검증 비활성화</p>
+ <div class="od-account-actions">
+ <button id="odCheckFocusButton" type="button" disabled>서버 집중 찾기</button>
+ <button id="odRestoreFocusButton" type="button" disabled>이어하기</button>
+</div>
+<p id="odServerFocusStatus" class="od-account-note" role="status" aria-live="polite">서버 집중 검증 비활성화</p>
  <p class="od-account-note">현재 브라우저의 테스트 퍼즐·여행 티켓은 실제 계정 기록과 완전히 분리되어 있습니다. 계정 데이터의 읽기 전용 조회만 지원하며, 직접 수정·가져오기는 허용되지 않습니다.</p>
 </div></dialog>
 <script>
