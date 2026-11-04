@@ -83,3 +83,17 @@ test('regional travel draw prevents duplicate spaces and ticket loss', async ({ 
   await expect(page.locator('#odMapTickets')).toContainText('3장');
   await expect(page.locator('#odRegions button').filter({ hasText: '발리' })).toBeDisabled();
 });
+
+test('account module defaults to disabled and never imports demo rewards into server', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173/');
+  await page.locator('#odAccountButton').click();
+  await expect(page.getByRole('dialog', { name: '내 계정과 서버 수집 기록' })).toBeVisible();
+  await expect(page.locator('#odAccountStatus')).toContainText('계정 연동은 아직 비활성화');
+  await expect(page.locator('#odLoginButton')).toBeDisabled();
+  await expect(page.locator('#odRefreshButton')).toBeDisabled();
+  await expect(page.locator('#odLogoutButton')).toBeDisabled();
+  await expect(page.locator('#odServerBalance')).toContainText('로그인 후 조회');
+  await expect(page.locator('#odServerScenes li')).toHaveCount(0);
+  const raw = await page.evaluate(() => localStorage.getItem('od-mvp-local-rewards-v1'));
+  expect(raw).toBeNull();
+});
