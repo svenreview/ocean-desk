@@ -56,3 +56,36 @@ test('logout discards server collection and returns to local demo without overwr
   const demo=await page.evaluate(()=>JSON.parse(localStorage.getItem('od-mvp-local-rewards-v1')));
   expect(demo).toMatchObject({pieces:2,tickets:1,owned:['bali-forest']});
 });
+
+
+test('same-account token renewal does not emit logout or discard active focus identity', async ({page})=>{
+  await page.evaluate(()=>window.__odAuthMock.signIn('alpha'));
+  await expect(page.locator('#odServerBalance')).toHaveText('서버 퍼즐 4/10 · 여행 티켓 2장');
+  const details=await page.evaluate(async()=>{
+    const events=[];
+    const cb=e=>events.push(e.detail);
+    window.addEventListener('od:account-session',cb);
+    window.__odAuthMock.switchTo('alpha');
+    await new Promise(resolve=>setTimeout(resolve,120));
+    window.removeEventListener('od:account-session',cb);
+    return events;
+  });
+  expect(details.filter(e=>e.loggedIn===false)).toHaveLength(0);
+  await expect(page.locator('#odServerBalance')).toHaveText('서버 퍼즐 4/10 · 여행 티켓 2장');
+});
+
+test('account change emits logout before loading next account details',async({page})=>{
+  await page.evaluate(()=>window.__odAuthMock.signIn('alpha'));
+  await expect(page.locator('#odServerBalance')).toHaveText('서버 퍼즐 4/10 · 여행 티켓 2장');
+  const states=await page.evaluate(async()=>{
+    const states=[];
+    const cb=e=>states.push(e.detail?.loggedIn);
+    window.addEventListener('od:account-session',cb);
+    window.__odAuthMock.switchTo('beta');
+    await new Promise(resolve=>setTimeout(resolve,120));
+    window.removeEventListener('od:account-session',cb);
+    return states;
+  });
+  expect(states).toContain(false);
+  await expect(page.locator('#odServerBalance')).toHaveText('서버 퍼즐 8/10 · 여행 티켓 7장');
+});
