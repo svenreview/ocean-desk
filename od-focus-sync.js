@@ -52,7 +52,9 @@ async function begin(minutes,accumulated){
   try{
     const result=await state.pending;
     if(nonce!==state.epoch){
-      await post('cancel',{session_id:result.session_id}).catch(()=>{});
+      // Explicit restore may adopt this exact session while start is pending.
+      if(state.session?.session_id!==result.session_id)
+        await post('cancel',{session_id:result.session_id}).catch(()=>{});
       return;
     }
     state.session=result;
@@ -138,7 +140,7 @@ restoreButton?.addEventListener('click',async()=>{
       detail:{minutes:Number(latest.planned_minutes),elapsed:Number(latest.elapsed_seconds)}
     }));
     if(!accepted){
-      say('먼저 공부 공간에 입장하고 타이머를 초기화한 뒤 이어하기를 선택해 주세요.');
+      say('먼저 공부 공간에 입장하고, 이전의 일시정지 기록은 초기화한 뒤 이어하기를 선택해 주세요.');
       return;
     }
     state.epoch++;
