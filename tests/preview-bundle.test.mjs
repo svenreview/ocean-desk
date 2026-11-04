@@ -12,7 +12,7 @@ test('local preview bundle uses public-only static files and never deploys',()=>
  assert.equal(result.ok,true,JSON.stringify(result.failures));
  assert.equal(result.deployActions,false);
  assert.equal(result.networkActions,false);
- assert.equal(result.files.length,8);
+ assert.equal(result.files.length,9);
  assert.ok(!result.files.some(name=>name.includes('.env')||name.includes('secret')||name.includes('.git')));
 });
 test('bundle refuses missing modules and unsafe auth settings',()=>{
@@ -30,6 +30,8 @@ test('local preview bundle copies matching files into a temporary folder without
    assert.equal(result.ok,true);
    for(const name of STATIC_PREVIEW_ASSETS)assert.ok(existsSync(join(directory,'preview',name)));
    assert.ok(readFileSync(join(directory,'preview','README.txt'),'utf8').includes('LOCAL DEMO'));
+   assert.ok(readFileSync(join(directory,'preview','README.txt'),'utf8').includes('--lan'));
+   assert.ok(readFileSync(join(directory,'preview','ocean-local-server.py'),'utf8').includes('ThreadingHTTPServer'));
    assert.equal(result.deployActions,false);
  }finally{rmSync(directory,{recursive:true,force:true})}
 });
