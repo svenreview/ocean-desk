@@ -11,6 +11,7 @@ on:
       - scripts/ocean-staging-preflight.mjs
       - scripts/ocean-preview-readiness.mjs
       - scripts/ocean-preview-bundle.mjs
+      - ocean-local-server.py
       - od-focus-sync.js
       - od-wallet-bootstrap.mjs
       - tests/**
