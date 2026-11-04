@@ -19,6 +19,9 @@ const configured=Boolean(config.enabled && /^https:\/\/[a-z0-9-]+\.supabase\.co$
  && typeof config.publishableKey==='string' && /^(sb_publishable_|eyJ)/.test(config.publishableKey));
 let client=null;
 let unsubscribe=null;
+let authenticatedId=null;
+let readVersion=0;
+const publishCollection=detail=>window.dispatchEvent(new CustomEvent('od:server-collection',{detail}));
 const setStatus=(message)=>{status.textContent=message};
 const clearServer=()=>{
   balance.textContent='서버 퍼즐·티켓: 로그인 후 조회';
@@ -44,30 +47,38 @@ if(!configured){
     const onAuth=async()=>{
       const {data:{user},error}=await client.auth.getUser();
       if(error||!user){
+        authenticatedId=null;
+        ++readVersion;
+        publishCollection({active:false});
         clearServer();logout.disabled=true;refresh.disabled=true;initWallet.disabled=true;login.disabled=false;googleLogin.disabled=!config.googleEnabled;
         setStatus('로그인되지 않았습니다. 이메일로 로그인 링크를 받을 수 있습니다.');
         window.dispatchEvent(new CustomEvent('od:account-session',{detail:{loggedIn:false}}));
         return;
       }
+      authenticatedId=user.id;
       login.disabled=true;googleLogin.disabled=true;logout.disabled=false;refresh.disabled=false;initWallet.disabled=false;
       setStatus('로그인: '+(user.email || '사용자')+' · 서버 기록 읽기 전용');
       window.dispatchEvent(new CustomEvent('od:account-session',{detail:{loggedIn:true}}));
       await readServer(user.id);
     };
     async function readServer(userId){
+      const currentRead=++readVersion;
       clearServer();
       const [walletResult,ownedResult,sessionsResult]=await Promise.all([
         client.from('od_wallets').select('pieces,tickets').eq('user_id',userId).maybeSingle(),
         client.from('od_owned_environments').select('environment_id,acquired_at').eq('user_id',userId),
         client.from('od_focus_attempts').select('id,planned_minutes,started_at,completed_at,status').eq('user_id',userId).order('started_at',{ascending:false}).limit(10)
       ]);
+      if(currentRead!==readVersion||authenticatedId!==userId)return;
       if(walletResult.error||ownedResult.error||sessionsResult.error){
+        publishCollection({active:false});
         setStatus('서버 기록 조회에 실패했습니다. DB 스키마·권한 적용 상태를 확인해 주세요.');
         return;
       }
       if(!walletResult.data)balance.textContent='서버 지갑이 아직 생성되지 않았습니다.';
       else balance.textContent='서버 퍼즐 '+walletResult.data.pieces+'/10 · 여행 티켓 '+walletResult.data.tickets+'장';
       const ids=new Set((ownedResult.data||[]).map(x=>x.environment_id));
+      publishCollection({active:true,userId,ready:Boolean(walletResult.data),pieces:walletResult.data?.pieces??0,tickets:walletResult.data?.tickets??0,owned:[...ids]});
       for(const id of ids){
         const item=document.createElement('li');item.textContent=id;sceneList.appendChild(item);
       }
@@ -130,6 +141,10 @@ if(!configured){
       finally{initWallet.disabled=false}
     });
     logout.addEventListener('click',async()=>{
+      authenticatedId=null;
+      ++readVersion;
+      publishCollection({active:false});
+      clearServer();
       const {error}=await client.auth.signOut();
       if(error)setStatus('로그아웃 실패: '+error.message);
       else await onAuth();
