@@ -15,7 +15,7 @@
   <div class="shell">
     <header class="site-header">
       <div class="brand-mark"><span class="brand-wave">≈</span><div class="brand-copy"><strong>OCEAN <i>DESK</i></strong><small>YOUR QUIET PLACE BY THE SEA</small></div></div>
-      <div class="header-right"><span class="beta">PREVIEW 01</span><span class="top-dot"></span><span id="connectionLabel">로컬 체험 모드</span><button type="button" id="odGalleryOpen" class="icon-pill" style="width:auto;padding:0 13px;border-radius:20px" aria-label="나의 갤러리 열기">갤러리</button><button type="button" id="helpBtn" class="icon-pill" aria-label="사용법">?</button></div>
+      <div class="header-right"><span class="beta">PREVIEW 01</span><span class="top-dot"></span><span id="connectionLabel">로컬 체험 모드</span><button type="button" id="odAccountButton" class="icon-pill" style="width:auto;padding:0 12px;border-radius:20px" aria-label="계정 및 서버 기록">계정</button><button type="button" id="odGalleryOpen" class="icon-pill" style="width:auto;padding:0 13px;border-radius:20px" aria-label="나의 갤러리 열기">갤러리</button><button type="button" id="helpBtn" class="icon-pill" aria-label="사용법">?</button></div>
     </header>
 
     <main class="main-layout">
@@ -695,6 +695,45 @@ document.getElementById('odMapToGallery').onclick=()=>{
 };
 })();
 </script>
+
+
+<!-- Ocean Desk account connection: OFF unless configured. Demo rewards never sync. -->
+<style>
+#odAccountDialog{border:0;padding:0;max-width:min(92vw,480px);width:100%;background:transparent;color:#1d4450}
+#odAccountDialog::backdrop{background:#082e3cbf;backdrop-filter:blur(5px)}
+.od-account-card{background:#fbfdfc;border-radius:18px;padding:22px;box-shadow:0 22px 80px #10394966}
+.od-account-head{display:flex;justify-content:space-between;align-items:center}
+.od-account-head h2{margin:0;color:#1c5362;font-size:22px}
+.od-account-head button{border:0;border-radius:50%;height:32px;width:32px;background:#e3f0ed;font-size:20px}
+.od-account-field{display:block;margin-top:18px;font-size:12px;color:#496e78;font-weight:750}
+#odAccountEmail{display:block;border:1px solid #cadee0;border-radius:9px;width:100%;padding:12px;margin:6px 0 12px}
+.od-account-actions{display:flex;gap:8px;flex-wrap:wrap}
+.od-account-actions button{flex:1;border:0;background:#246e7a;color:white;padding:11px;border-radius:9px;font-weight:800}
+.od-account-actions button:disabled{opacity:.45}
+#odAccountStatus{font-size:12px;line-height:1.7;color:#476f77}
+.od-account-server{padding:14px;background:#ecf6f3;border-radius:12px;margin-top:16px}
+.od-account-server h3{font-size:13px;margin:0 0 6px}.od-account-server ul{padding-left:18px;font-size:12px}
+.od-account-note{font-size:10px;color:#84999f;line-height:1.65}
+</style>
+<dialog id="odAccountDialog" aria-label="내 계정과 서버 수집 기록">
+<div class="od-account-card">
+ <div class="od-account-head"><h2>내 계정 · 서버 컬렉션</h2><button id="odAccountClose" type="button" aria-label="닫기">×</button></div>
+ <p id="odAccountStatus" role="status" aria-live="polite">계정 모듈을 확인하고 있습니다.</p>
+ <label class="od-account-field" for="odAccountEmail">이메일 주소</label>
+ <input id="odAccountEmail" type="email" autocomplete="email" placeholder="example@email.com"/>
+ <div class="od-account-actions">
+   <button id="odLoginButton" type="button" disabled>이메일 로그인</button>
+   <button id="odRefreshButton" type="button" disabled>새로고침</button>
+   <button id="odLogoutButton" type="button" disabled>로그아웃</button>
+ </div>
+ <div class="od-account-server"><h3 id="odServerBalance">서버 퍼즐·티켓: 로그인 후 조회</h3>
+ <ul id="odServerScenes"></ul></div>
+ <p class="od-account-note">현재 브라우저의 테스트 퍼즐·여행 티켓은 실제 계정 기록과 완전히 분리되어 있습니다. 계정 데이터의 읽기 전용 조회만 지원하며, 직접 수정·가져오기는 허용되지 않습니다.</p>
+</div></dialog>
+<script>
+window.OD_SUPABASE_CONFIG={enabled:false}; // Enable only with explicitly configured URL + PUBLIC publishable key.
+</script>
+<script type="module" src="./od-account.js"></script>
 
 </body>
 </html>
