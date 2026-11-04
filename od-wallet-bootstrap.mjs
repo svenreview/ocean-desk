@@ -17,7 +17,7 @@ export function createWalletBootstrap({getAccessToken,request,endpoint,publishab
         if(!response.ok)return {ok:false,error:'wallet_initialize_unavailable',status:response.status};
         const data=await response.json();
         if(data?.user_id!==userId)return {ok:false,error:'account_mismatch'};
-        if(!Number.isInteger(data.pieces)||!Number.isInteger(data.tickets))return {ok:false,error:'invalid_server_wallet'};
+        if(!Number.isInteger(data.pieces)||data.pieces<0||data.pieces>9||!Number.isSafeInteger(data.tickets)||data.tickets<0)return {ok:false,error:'invalid_server_wallet'};
         return {ok:true,wallet:{pieces:data.pieces,tickets:data.tickets}};
       }catch{return {ok:false,error:'network_unavailable'}}
     })();
