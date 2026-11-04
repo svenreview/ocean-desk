@@ -165,3 +165,43 @@ test('server collection snapshot never merges or spends local demo progress', as
   await expect(page.locator('#odRegions button').filter({hasText:'발리'})).toBeEnabled();
   await expect(page.locator('#odGalleryCount')).toContainText('로컬 데모');
 });
+
+
+test('changing timer duration preserves partial local focus without granting a puzzle',async({page})=>{
+  await page.goto('http://127.0.0.1:4173/');
+  await page.locator('#odGalleryOpen').click();
+  await page.locator('#odStudy').click();
+  const result=await page.evaluate(()=>{
+    state.timerStart=Date.now()-92*1000;
+    timerRender();
+    document.querySelector('[data-min="50"]').click();
+    return {total:state.completedSeconds,accum:state.timerAccum,
+      running:state.running,minutes:state.timerMin,
+      current:document.getElementById('timerText').textContent};
+  });
+  expect(result.total).toBeGreaterThanOrEqual(91);
+  expect(result.total).toBeLessThanOrEqual(95);
+  expect(result).toMatchObject({accum:0,running:false,minutes:50,current:'50:00'});
+  await expect(page.locator('#odReward')).not.toBeVisible();
+  await expect(page.locator('#totalFocus')).toContainText('01분');
+});
+
+test('switching duration after pausing retains accumulated time exactly once',async({page})=>{
+  await page.goto('http://127.0.0.1:4173/');
+  await page.locator('#odGalleryOpen').click();
+  await page.locator('#odStudy').click();
+  const result=await page.evaluate(()=>{
+    state.timerStart=Date.now()-63*1000;
+    document.getElementById('timerStart').click(); // pause
+    const before=state.completedSeconds;
+    document.querySelector('[data-min="50"]').click();
+    const once=state.completedSeconds;
+    document.querySelector('[data-min="50"]').click();
+    return {before,once,twice:state.completedSeconds,running:state.running};
+  });
+  expect(result.once-result.before).toBeGreaterThanOrEqual(62);
+  expect(result.once-result.before).toBeLessThanOrEqual(65);
+  expect(result.twice).toBe(result.once);
+  expect(result.running).toBe(false);
+  await expect(page.locator('#odReward')).not.toBeVisible();
+});
