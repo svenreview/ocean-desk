@@ -162,9 +162,13 @@ if(!configured){
     });
     refresh.addEventListener('click',()=>onAuth());
     const authListener=client.auth.onAuthStateChange(()=>{
-      // Invalidate an in-flight getUser immediately when the session changes.
+      // Clear previous account data immediately, before any async getUser resolves.
       authEpoch.invalidate();
       ++readVersion;
+      authenticatedId=null;
+      publishCollection({active:false});
+      clearServer();
+      window.dispatchEvent(new CustomEvent('od:account-session',{detail:{loggedIn:false}}));
       queueMicrotask(()=>{void onAuth()});
     });
     unsubscribe=()=>authListener.data.subscription.unsubscribe();
