@@ -6,7 +6,9 @@ test('Bali gallery enters original 25-minute timer with waves and awards one tes
   await expect(page.getByRole('dialog', { name: '나의 갤러리' })).toBeVisible();
   await page.getByRole('button', { name: '이 공간에서 공부하기' }).click();
   await expect(page.locator('#oceanOverlay')).toHaveClass(/active/);
-  await expect(page.locator('#oceanOverlay')).toHaveClass(/od-bali/);
+  await expect(page.locator('#oceanOverlay')).toHaveClass(/od-custom-scene/);
+  await expect(page.locator('#photoView')).toHaveAttribute('aria-label',/발리 오션카페/);
+  expect(await page.locator('#photoView').evaluate(el=>el.style.backgroundImage)).toContain('data:image/svg+xml');
   await expect(page.locator('#oceanSeatLabel')).toContainText('발리 오션카페');
   await expect(page.locator('#timerText')).toContainText('25:');
   await expect(page.locator('#soundToggle')).toHaveAttribute('aria-checked', 'true');
