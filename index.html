@@ -194,7 +194,26 @@ window.addEventListener('od:restore-server-focus',event=>{
 function pauseTimer(){state.timerAccum=timerElapsed();state.running=false;state.timerStart=null;timerRender();window.dispatchEvent(new CustomEvent('od:timer-state',{detail:{action:'pause'}}))}
 $('timerStart').addEventListener('click',()=>{if(!mustEnter())return;if(state.running){pauseTimer();toast('잠깐 쉬어도 괜찮습니다.');return}toastDone=false;state.running=true;state.timerStart=Date.now();setMode('focus');world.act('read');timerRender();window.dispatchEvent(new CustomEvent('od:timer-state',{detail:{action:'start',minutes:state.timerMin,accumulated:state.timerAccum}}));toast('집중을 시작했습니다. 파이팅!')});
 $('timerReset').addEventListener('click',()=>{if(state.timerAccum>0||state.running){const elapsed=timerElapsed();state.completedSeconds+=elapsed;setStorage('ocean-focus-seconds',state.completedSeconds)}state.running=false;state.timerStart=null;state.timerAccum=0;toastDone=false;timerRender();window.dispatchEvent(new CustomEvent('od:timer-state',{detail:{action:'reset'}}));toast('타이머를 초기화했습니다. 지난 집중 시간은 저장되었습니다.')});
-document.querySelectorAll('[data-min]').forEach(b=>b.addEventListener('click',()=>{if(state.running)pauseTimer();state.timerMin=Number(b.dataset.min);state.timerStart=null;state.timerAccum=0;toastDone=false;document.querySelectorAll('[data-min]').forEach(x=>x.classList.toggle('active',x===b));timerRender()}));
+document.querySelectorAll('[data-min]').forEach(b=>b.addEventListener('click',()=>{
+ const nextMinutes=Number(b.dataset.min);
+ if(![0,25,50].includes(nextMinutes))return;
+ // Changing to a different duration ends the previous local attempt.
+ // Previously paused seconds must not silently disappear.
+ if(state.timerMin!==nextMinutes){
+   if(state.running)pauseTimer(); // also invalidates any pending server receipt
+   const elapsed=timerElapsed();
+   if(elapsed>0){
+     state.completedSeconds+=elapsed;
+     setStorage('ocean-focus-seconds',state.completedSeconds);
+   }
+   state.running=false;state.timerStart=null;state.timerAccum=0;
+   toastDone=false;
+   window.dispatchEvent(new CustomEvent('od:timer-state',{detail:{action:'reset'}}));
+ }
+ state.timerMin=nextMinutes;
+ document.querySelectorAll('[data-min]').forEach(x=>x.classList.toggle('active',x===b));
+ timerRender();
+}));
 // Simple, entirely generated ocean-like filtered noise, started only after user gesture
 let audioCtx=null,source=null,filter=null,gain=null,modOsc=null,modGain=null;
 function startOcean(){try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();let length=audioCtx.sampleRate*3;const buffer=audioCtx.createBuffer(1,length,audioCtx.sampleRate);let d=buffer.getChannelData(0);let prev=0;for(let i=0;i<length;i++){const white=Math.random()*2-1;prev=(prev+0.015*white)/1.015;d[i]=prev*3}source=audioCtx.createBufferSource();source.buffer=buffer;source.loop=true;filter=audioCtx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=430;gain=audioCtx.createGain();gain.gain.value=Number($('volume').value)/100*.55;source.connect(filter).connect(gain).connect(audioCtx.destination);modOsc=audioCtx.createOscillator();modOsc.frequency.value=.15;modGain=audioCtx.createGain();modGain.gain.value=.09;modOsc.connect(modGain).connect(gain.gain);source.start();modOsc.start()}catch(err){console.warn(err);toast('이 브라우저에서 소리 재생이 지원되지 않습니다.')}}
