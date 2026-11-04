@@ -573,6 +573,13 @@ oceanCanvas.addEventListener('pointercancel',()=>dragOcean=null);
   <div class="od-weekly-heading"><strong>최근 7일 집중</strong><span id="odWeeklyTotal">0분 · 0회</span><span id="odFocusStreak">연속 0일</span></div>
   <div id="odWeeklyChart" class="od-weekly-chart" role="list" aria-label="날짜별 완료 집중 시간"></div>
   <p id="odWeeklyNote">이 브라우저에서 완료한 세션만 반영합니다.</p>
+  <div id="odGoalPanel" class="od-goal-panel" aria-label="주간 집중 목표">
+   <label for="odWeeklyGoal">7일 집중 목표</label>
+   <select id="odWeeklyGoal" aria-label="최근 7일 집중 목표"><option value="100">100분</option><option value="150" selected>150분</option><option value="300">300분</option><option value="600">600분</option></select>
+   <div id="odGoalText" role="status" aria-live="polite">0 / 150분</div>
+   <progress id="odGoalProgress" max="150" value="0" aria-label="주간 집중 목표 달성률"></progress>
+  </div>
+  <div id="odStreakBadges" class="od-streak-badges" aria-label="연속 집중 성취 배지"></div>
  </div>
 </section>
 <div id="odCollectionNav" class="od-collection-nav"><button id="odMapOpen" class="od-map-link" type="button">🌍 세계지도 · 여행 탐험</button><span id="odGalleryCount" aria-live="polite">내 컬렉션</span></div><div id="odGalleryFilters" class="od-gallery-filters" role="group" aria-label="갤러리 공간 필터"><button type="button" data-gallery-filter="all" aria-pressed="true">전체</button><button type="button" data-gallery-filter="owned" aria-pressed="false">획득</button><button type="button" data-gallery-filter="locked" aria-pressed="false">잠금</button></div><p id="odGalleryFilterStatus" class="od-gallery-filter-status" role="status" aria-live="polite">전체 공간</p><div class="od-collection-frames" id="odFrames" aria-label="집중 공간 목록"></div><div class="od-hero">
@@ -648,10 +655,24 @@ function weeklyFocusSummary(records,now=new Date()){
  while(streak<400&&dates.has(dayKey(cursor))){streak++;cursor.setDate(cursor.getDate()-1)}
  return {days,totalMinutes,totalSessions,streak};
 }
+const weeklyGoalKey='od-weekly-goal-v1';
+const allowedWeeklyGoals=[100,150,300,600];
+let weeklyGoal=150;
+try{const candidate=Number(localStorage.getItem(weeklyGoalKey));if(allowedWeeklyGoals.includes(candidate))weeklyGoal=candidate}catch{}
+el('odWeeklyGoal').value=String(weeklyGoal);
+el('odWeeklyGoal').addEventListener('change',()=>{
+ const next=Number(el('odWeeklyGoal').value);
+ if(!allowedWeeklyGoals.includes(next)||serverCollection?.active)return;
+ weeklyGoal=next;
+ try{localStorage.setItem(weeklyGoalKey,String(next))}catch{}
+ renderWeeklySummary();
+});
 function renderWeeklySummary(){
  const server=Boolean(serverCollection?.active);
  const chart=el('odWeeklyChart');chart.replaceChildren();
  if(server){
+  el('odGoalPanel').hidden=true;
+  el('odStreakBadges').hidden=true;
   el('odWeeklyTotal').textContent='서버 기록 별도';
   el('odFocusStreak').textContent='계정에서 조회';
   el('odWeeklyNote').textContent='서버 계정의 집중 내역은 계정 화면에서 확인하세요. 로컬 주간 기록은 합산하지 않습니다.';
@@ -659,6 +680,22 @@ function renderWeeklySummary(){
   return;
  }
  const summary=weeklyFocusSummary(loadDaily());
+ el('odGoalPanel').hidden=false;
+ el('odStreakBadges').hidden=false;
+ const percentage=Math.min(100,Math.round(summary.totalMinutes/weeklyGoal*100));
+ el('odGoalProgress').max=weeklyGoal;
+ el('odGoalProgress').value=Math.min(weeklyGoal,summary.totalMinutes);
+ el('odGoalProgress').setAttribute('aria-valuetext',summary.totalMinutes+'분 중 '+weeklyGoal+'분 목표, '+percentage+'%');
+ el('odGoalText').textContent=summary.totalMinutes+' / '+weeklyGoal+'분 · '+percentage+'%'+(summary.totalMinutes>=weeklyGoal?' 달성':'');
+ const badges=el('odStreakBadges');badges.replaceChildren();
+ for(const threshold of [3,7,14]){
+  const earned=summary.streak>=threshold;
+  const badge=document.createElement('span');
+  badge.className='od-streak-badge'+(earned?' earned':'');
+  badge.textContent=(earned?'★ ':'☆ ')+threshold+'일';
+  badge.setAttribute('aria-label',threshold+'일 연속 집중 배지 '+(earned?'달성':'미달성'));
+  badges.append(badge);
+ }
  el('odWeeklyTotal').textContent=summary.totalMinutes+'분 · '+summary.totalSessions+'회';
  el('odFocusStreak').textContent='연속 '+summary.streak+'일';
  el('odWeeklyNote').textContent='이 브라우저의 완료 세션 기준 · 7일 전부터 오늘까지';
@@ -924,6 +961,17 @@ try{const stored=JSON.parse(localStorage.getItem('od-selected-environment')||'nu
 .od-weekly-label{font-weight:750}
 #odWeeklyNote{margin:8px 0 0;font-size:10px;color:#608086;line-height:1.5}
 @media(max-width:420px){.od-weekly-chart{gap:3px}.od-weekly-value{font-size:9px}.od-weekly-heading>strong{width:100%}}
+</style>
+<style>
+.od-goal-panel{display:grid;grid-template-columns:1fr auto;gap:7px 12px;align-items:center;margin-top:14px;font-size:11px;color:#345e67}
+.od-goal-panel[hidden],.od-streak-badges[hidden]{display:none!important}
+.od-goal-panel label{font-size:12px;font-weight:800}
+#odWeeklyGoal{border:1px solid #a7c9c4;border-radius:8px;background:white;color:#315e68;padding:7px 10px;min-height:38px}
+#odGoalText{grid-column:1/-1;font-size:11px;font-weight:700}
+#odGoalProgress{grid-column:1/-1;width:100%;height:10px;accent-color:#287d81}
+.od-streak-badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+.od-streak-badge{padding:7px 11px;border:1px solid #cbdedb;border-radius:20px;background:#edf2f0;color:#78929a;font-size:11px;font-weight:750}
+.od-streak-badge.earned{background:#d1eadc;color:#225f59;border-color:#75b5a6}
 </style>
 <style>
 #odNewRoomOpen[hidden]{display:none!important}
