@@ -275,3 +275,48 @@ test('world region progress is dynamic and shows count and visual progress',asyn
  await expect(jeju).toHaveAttribute('aria-label',/2개 \/ 3개 수집/);
  await expect(page.locator('#odRegions .od-region-track')).toHaveCount(3);
 });
+
+
+test('selected unlocked scenery retains its description across view modes and preserves running focus',async({page})=>{
+  await page.goto('http://127.0.0.1:4173/');
+  await page.evaluate(()=>localStorage.setItem('od-mvp-local-rewards-v1',JSON.stringify({pieces:0,tickets:0,claims:[],owned:['jeju-forest']})));
+  await page.reload();
+  await page.locator('#odGalleryOpen').click();
+  await page.locator('#odFrames button').filter({hasText:'제주 숲속서재'}).click();
+  await page.locator('#odStudy').click();
+  await expect(page.locator('#oceanOverlay')).toHaveClass(/active/);
+  await expect(page.locator('#oceanSeatLabel')).toContainText('제주 숲속서재');
+  const initial=await page.evaluate(()=>({running:state.running,audio:state.audioOn,minutes:state.timerMin}));
+  expect(initial.running).toBe(true);
+  await page.locator('#viewScene').click();
+  await expect(page.locator('#viewModeHint')).toContainText('숲속의 책상');
+  await page.locator('#viewRead').click();
+  await expect(page.locator('#viewModeHint')).toContainText('숲속의 책상');
+  await page.locator('#viewFocus').click();
+  await expect(page.locator('#viewModeHint')).toContainText('숲속의 책상');
+  await expect(page.locator('#photoView')).toHaveAttribute('aria-label',/제주 숲속서재/);
+  const after=await page.evaluate(()=>({running:state.running,audio:state.audioOn,minutes:state.timerMin}));
+  expect(after).toEqual(initial);
+});
+
+test('mobile focus controls and timer fit the narrow viewport',async({page})=>{
+  await page.setViewportSize({width:360,height:740});
+  await page.goto('http://127.0.0.1:4173/');
+  await page.locator('#odGalleryOpen').click();
+  await page.locator('#odStudy').click();
+  const layout=await page.evaluate(()=>{
+    const ids=['viewSide','oceanFocusHud','oceanFoot'];
+    return {width:innerWidth,
+      boxes:ids.map(id=>({id,left:document.getElementById(id).getBoundingClientRect().left,right:document.getElementById(id).getBoundingClientRect().right})),
+      running:state.running};
+  });
+  expect(layout.running).toBe(true);
+  for(const rect of layout.boxes){
+    expect(rect.left).toBeGreaterThanOrEqual(-1);
+    expect(rect.right).toBeLessThanOrEqual(layout.width+1);
+  }
+  await page.locator('#viewPause').click();
+  await expect(page.locator('#timerStart')).toContainText('이어 집중하기');
+  await page.locator('#viewWaves').click();
+  await expect(page.locator('#viewWaves')).toHaveAttribute('aria-pressed','false');
+});
