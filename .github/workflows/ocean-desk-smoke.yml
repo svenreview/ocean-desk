@@ -39,6 +39,8 @@ jobs:
         run: node --test tests/wallet-bootstrap.test.mjs tests/auth-flow.test.mjs tests/config-validator.test.mjs tests/staging-preflight.test.mjs tests/preview-readiness.test.mjs tests/preview-bundle.test.mjs
       - name: Run Chromium smoke tests
         run: npx playwright test tests/ocean-desk.spec.mjs tests/auth-account.spec.mjs --browser=chromium --workers=1 --reporter=line
+      - name: Validate local mobile preview launcher Python syntax
+        run: python3 -B -c "import ast, pathlib; ast.parse(pathlib.Path('ocean-local-server.py').read_text(encoding='utf-8'))"
       - name: Package free offline Preview files without deploying
         run: |
           node scripts/ocean-preview-bundle.mjs preview-package
