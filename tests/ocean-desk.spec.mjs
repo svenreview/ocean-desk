@@ -44,3 +44,42 @@ test('ten unique test sessions produce ticket; region unlock has no duplicates',
   await page.getByRole('button', { name: /세계지도/ }).click();
   await expect(page.locator('#odMapTickets')).toContainText('0장');
 });
+
+test('mobile gallery supports 50-minute silent focus', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('http://127.0.0.1:4173/');
+  await page.locator('#odGalleryOpen').click();
+  await expect(page.locator('#odGallery')).toBeVisible();
+  await page.locator('#od50').click();
+  await page.locator('#odMute').click();
+  await page.locator('#odStudy').click();
+  await expect(page.locator('#oceanOverlay')).toHaveClass(/active/);
+  await expect(page.locator('#timerText')).toContainText('50:');
+  await expect(page.locator('#soundToggle')).toHaveAttribute('aria-checked', 'false');
+});
+
+test('regional travel draw prevents duplicate spaces and ticket loss', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173/');
+  await page.evaluate(() => {
+    localStorage.setItem('od-mvp-local-rewards-v1', JSON.stringify({
+      pieces: 0, tickets: 5, claims: [], owned: []
+    }));
+  });
+  await page.reload();
+  await page.locator('#odGalleryOpen').click();
+  await page.locator('#odMapOpen').click();
+  await expect(page.locator('#odMapTickets')).toContainText('5장');
+  const bali = page.locator('#odRegions button').filter({ hasText: '발리' });
+  await bali.click();
+  await bali.click();
+  await expect(bali).toBeDisabled(); // Bali café is already unlocked, so only two draws remain.
+  await expect(page.locator('#odMapTickets')).toContainText('3장');
+  const owned = await page.evaluate(() => JSON.parse(localStorage.getItem('od-mvp-local-rewards-v1')));
+  expect(new Set(owned.owned).size).toBe(2);
+  expect(owned.owned).toEqual(expect.arrayContaining(['bali-sunset','bali-forest']));
+  await page.reload();
+  await page.locator('#odGalleryOpen').click();
+  await page.locator('#odMapOpen').click();
+  await expect(page.locator('#odMapTickets')).toContainText('3장');
+  await expect(page.locator('#odRegions button').filter({ hasText: '발리' })).toBeDisabled();
+});
