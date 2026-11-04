@@ -272,6 +272,6 @@ test('world region progress is dynamic and shows count and visual progress',asyn
  await expect(jeju).toHaveAttribute('aria-label',/2개 \/ 3개 수집/);
  await expect(jeju.locator('.od-region-fill')).toHaveAttribute('style',/width: 67%/);
  await jeju.click();
- await expect(jeju).toHaveAttribute('aria-label',/3개 \/ 3개 수집/).catch(()=>{});
+ await expect(jeju).toHaveAttribute('aria-label',/3개 \/ 3개 수집/);
  await expect(page.locator('#odRegions .od-region-track')).toHaveCount(3);
 });
