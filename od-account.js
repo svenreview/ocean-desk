@@ -8,11 +8,13 @@ const accountDialog=qs('odAccountDialog');
 const status=qs('odAccountStatus');
 const emailInput=qs('odAccountEmail');
 const login=qs('odLoginButton');
+const googleLogin=qs('odGoogleLoginButton');
 const logout=qs('odLogoutButton');
 const refresh=qs('odRefreshButton');
 const initWallet=qs('odInitWalletButton');
 const balance=qs('odServerBalance');
 const sceneList=qs('odServerScenes');
+const sessionsList=qs('odServerSessions');
 const configured=Boolean(config.enabled && /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(config.url||'')
  && typeof config.publishableKey==='string' && /^(sb_publishable_|eyJ)/.test(config.publishableKey));
 let client=null;
@@ -21,11 +23,12 @@ const setStatus=(message)=>{status.textContent=message};
 const clearServer=()=>{
   balance.textContent='서버 퍼즐·티켓: 로그인 후 조회';
   sceneList.replaceChildren();
+  sessionsList?.replaceChildren();
 };
 accountButton.addEventListener('click',()=>accountDialog.showModal());
 qs('odAccountClose').addEventListener('click',()=>accountDialog.close());
 if(!configured){
-  login.disabled=true;refresh.disabled=true;logout.disabled=true;initWallet.disabled=true;
+  login.disabled=true;googleLogin.disabled=true;refresh.disabled=true;logout.disabled=true;initWallet.disabled=true;
   setStatus('계정 연동은 아직 비활성화 상태입니다. 로컬 퍼즐·티켓은 테스트 기록입니다.');
 }else{
   try{
@@ -41,21 +44,22 @@ if(!configured){
     const onAuth=async()=>{
       const {data:{user},error}=await client.auth.getUser();
       if(error||!user){
-        clearServer();logout.disabled=true;refresh.disabled=true;initWallet.disabled=true;login.disabled=false;
+        clearServer();logout.disabled=true;refresh.disabled=true;initWallet.disabled=true;login.disabled=false;googleLogin.disabled=false;
         setStatus('로그인되지 않았습니다. 이메일로 로그인 링크를 받을 수 있습니다.');
         return;
       }
-      login.disabled=true;logout.disabled=false;refresh.disabled=false;initWallet.disabled=false;
+      login.disabled=true;googleLogin.disabled=true;logout.disabled=false;refresh.disabled=false;initWallet.disabled=false;
       setStatus('로그인: '+(user.email || '사용자')+' · 서버 기록 읽기 전용');
       await readServer(user.id);
     };
     async function readServer(userId){
       clearServer();
-      const [walletResult,ownedResult]=await Promise.all([
+      const [walletResult,ownedResult,sessionsResult]=await Promise.all([
         client.from('od_wallets').select('pieces,tickets').eq('user_id',userId).maybeSingle(),
-        client.from('od_owned_environments').select('environment_id,acquired_at').eq('user_id',userId)
+        client.from('od_owned_environments').select('environment_id,acquired_at').eq('user_id',userId),
+        client.from('od_focus_attempts').select('id,planned_minutes,started_at,completed_at,status').eq('user_id',userId).order('started_at',{ascending:false}).limit(10)
       ]);
-      if(walletResult.error||ownedResult.error){
+      if(walletResult.error||ownedResult.error||sessionsResult.error){
         setStatus('서버 기록 조회에 실패했습니다. DB 스키마·권한 적용 상태를 확인해 주세요.');
         return;
       }
@@ -68,7 +72,28 @@ if(!configured){
       if(!ids.size){
         const item=document.createElement('li');item.textContent='아직 서버에서 획득한 공간이 없습니다.';sceneList.appendChild(item);
       }
+      const records=sessionsResult.data||[];
+      for(const record of records){
+        const item=document.createElement('li');
+        const time=new Date(record.started_at);
+        const label=record.status==='completed'?'완료':record.status==='active'?'진행 중':'종료';
+        item.textContent=`${Number(record.planned_minutes)}분 · ${label} · ${Number.isNaN(time.getTime())?'시간 미확인':time.toLocaleString('ko-KR')}`;
+        sessionsList?.appendChild(item);
+      }
+      if(!records.length){const item=document.createElement('li');item.textContent='서버에 저장된 집중 기록이 없습니다.';sessionsList?.appendChild(item)}
     }
+    googleLogin.addEventListener('click',async()=>{
+      if(!config.googleEnabled){setStatus('Google 로그인 설정 전입니다.');return}
+      googleLogin.disabled=true;
+      try{
+        const destination=new URL(window.location.pathname,window.location.origin).href;
+        const {error}=await client.auth.signInWithOAuth({
+          provider:'google',
+          options:{redirectTo:destination}
+        });
+        if(error)throw error;
+      }catch(e){setStatus('Google 로그인 실패: '+(e?.message||'오류'));googleLogin.disabled=false}
+    });
     login.addEventListener('click',async()=>{
       const email=emailInput.value.trim();
       if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return setStatus('올바른 이메일 주소를 입력해 주세요.');
@@ -115,7 +140,7 @@ if(!configured){
     unsubscribe=()=>authListener.data.subscription.unsubscribe();
     await onAuth();
   }catch(e){
-    login.disabled=true;logout.disabled=true;refresh.disabled=true;
+    login.disabled=true;googleLogin.disabled=true;logout.disabled=true;refresh.disabled=true;initWallet.disabled=true;
     setStatus('계정 모듈을 불러오지 못했습니다. 설정 또는 네트워크를 확인해 주세요.');
     console.warn('Ocean Desk auth module init failed',e);
   }
