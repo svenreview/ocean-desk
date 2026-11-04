@@ -370,3 +370,48 @@ test('gallery preview and active study scenery show the matching local illustrat
  await page.locator('#viewFocus').click();
  expect(await page.evaluate(()=>({running:state.running,minutes:state.timerMin,audio:state.audioOn}))).toEqual(before);
 });
+
+
+test('landscape lighting cycles through natural warm dim and survives reopening without changing focus',async({page})=>{
+ await page.goto('http://127.0.0.1:4173/');
+ await page.locator('#odGalleryOpen').click();
+ await page.locator('#odStudy').click();
+ const first=await page.evaluate(()=>({running:state.running,minutes:state.timerMin,audio:state.audioOn}));
+ await expect(page.locator('#viewLight')).toHaveAttribute('data-light','natural');
+ await page.locator('#viewLight').click();
+ await expect(page.locator('#oceanOverlay')).toHaveAttribute('data-light','warm');
+ await expect(page.locator('#viewLight')).toHaveAttribute('aria-label',/따뜻하게/);
+ await page.locator('#viewLight').click();
+ await expect(page.locator('#oceanOverlay')).toHaveAttribute('data-light','dim');
+ await page.locator('#viewLight').click();
+ await expect(page.locator('#oceanOverlay')).toHaveAttribute('data-light','natural');
+ await page.locator('#viewLight').click();
+ expect(await page.evaluate(()=>localStorage.getItem('od-light-preference-v1'))).toBe('warm');
+ const after=await page.evaluate(()=>({running:state.running,minutes:state.timerMin,audio:state.audioOn}));
+ expect(after).toEqual(first);
+ await page.reload();
+ await page.locator('#odGalleryOpen').click();
+ await page.locator('#odStudy').click();
+ await expect(page.locator('#viewLight')).toHaveAttribute('data-light','warm');
+ await expect(page.locator('#oceanOverlay')).toHaveAttribute('data-light','warm');
+});
+
+test('reduced-motion environment removes scenery and lighting transitions without disabling controls',async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.setViewportSize({width:360,height:740});
+ await page.goto('http://127.0.0.1:4173/');
+ await page.locator('#odGalleryOpen').click();
+ await page.locator('#odStudy').click();
+ const before=await page.locator('#photoView').evaluate(el=>getComputedStyle(el).transitionDuration);
+ const lightBefore=await page.locator('#oceanLightOverlay').evaluate(el=>getComputedStyle(el).transitionDuration);
+ expect(before).toBe('0s');
+ expect(lightBefore).toBe('0s');
+ const bounds=await page.locator('#viewLight').boundingBox();
+ expect(bounds).not.toBeNull();
+ expect(bounds.x).toBeGreaterThanOrEqual(0);
+ expect(bounds.x+bounds.width).toBeLessThanOrEqual(361);
+ await page.locator('#viewLight').click();
+ await expect(page.locator('#oceanOverlay')).toHaveAttribute('data-light','warm');
+ await page.locator('#viewPause').click();
+ await expect(page.locator('#viewPause')).toBeVisible();
+});
