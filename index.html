@@ -618,7 +618,7 @@ function recordDailySession(detail){
  const records=loadDaily();
  if(records.some(r=>r.id===id))return;
  records.push({id,date:dayKey(),minutes});
- try{localStorage.setItem(dailyKey,JSON.stringify(records.slice(-400)))}catch{}
+ try{localStorage.setItem(dailyKey,JSON.stringify({records:records.slice(-400)}))}catch{}
 }
 function renderDailySummary(){
  const today=dayKey(),local=loadDaily().filter(r=>r.date===today);
