@@ -2,6 +2,7 @@
 // This module is intentionally dormant until a publishable key and URL are configured.
 // No local demo balances are ever uploaded to Supabase.
 import {createWalletBootstrap} from './od-wallet-bootstrap.mjs';
+import {createAuthEpoch,startGoogleSignIn} from './od-auth-flow.mjs';
 const config=window.OD_SUPABASE_CONFIG || {};
 const qs=id=>document.getElementById(id);
 const accountButton=qs('odAccountButton');
@@ -22,6 +23,7 @@ let client=null;
 let unsubscribe=null;
 let authenticatedId=null;
 let readVersion=0;
+const authEpoch=createAuthEpoch();
 let ensureWallet=null;
 const publishCollection=detail=>window.dispatchEvent(new CustomEvent('od:server-collection',{detail}));
 const setStatus=(message)=>{status.textContent=message};
@@ -53,7 +55,9 @@ if(!configured){
       publishableKey:config.publishableKey
     });
     const onAuth=async()=>{
+      const requestEpoch=authEpoch.next();
       const {data:{user},error}=await client.auth.getUser();
+      if(!authEpoch.isCurrent(requestEpoch))return;
       if(error||!user){
         authenticatedId=null;
         ++readVersion;
@@ -116,12 +120,7 @@ if(!configured){
       if(!config.googleEnabled){setStatus('Google 로그인 설정 전입니다.');return}
       googleLogin.disabled=true;
       try{
-        const destination=new URL(window.location.pathname,window.location.origin).href;
-        const {error}=await client.auth.signInWithOAuth({
-          provider:'google',
-          options:{redirectTo:destination}
-        });
-        if(error)throw error;
+        await startGoogleSignIn(client.auth,window.location);
       }catch(e){setStatus('Google 로그인 실패: '+(e?.message||'오류'));googleLogin.disabled=false}
     });
     login.addEventListener('click',async()=>{
@@ -152,17 +151,20 @@ if(!configured){
       finally{initWallet.disabled=false}
     });
     logout.addEventListener('click',async()=>{
+      authEpoch.invalidate();
       authenticatedId=null;
       ++readVersion;
       publishCollection({active:false});
       clearServer();
       const {error}=await client.auth.signOut();
-      if(error)setStatus('로그아웃 실패: '+error.message);
+      if(error){setStatus('로그아웃 실패: '+error.message+' · 다시 로그인 상태를 확인합니다.');await onAuth();}
       else await onAuth();
     });
     refresh.addEventListener('click',()=>onAuth());
     const authListener=client.auth.onAuthStateChange(()=>{
-      // Deferred to avoid calling Supabase APIs synchronously inside auth callback.
+      // Invalidate an in-flight getUser immediately when the session changes.
+      authEpoch.invalidate();
+      ++readVersion;
       queueMicrotask(()=>{void onAuth()});
     });
     unsubscribe=()=>authListener.data.subscription.unsubscribe();
