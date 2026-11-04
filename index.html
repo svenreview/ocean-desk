@@ -15,7 +15,7 @@
   <div class="shell">
     <header class="site-header">
       <div class="brand-mark"><span class="brand-wave">≈</span><div class="brand-copy"><strong>OCEAN <i>DESK</i></strong><small>YOUR QUIET PLACE BY THE SEA</small></div></div>
-      <div class="header-right"><span class="beta">PREVIEW 01</span><span class="top-dot"></span><span id="connectionLabel">로컬 체험 모드</span><button type="button" id="helpBtn" class="icon-pill" aria-label="사용법">?</button></div>
+      <div class="header-right"><span class="beta">PREVIEW 01</span><span class="top-dot"></span><span id="connectionLabel">로컬 체험 모드</span><button type="button" id="odGalleryOpen" class="icon-pill" style="width:auto;padding:0 13px;border-radius:20px" aria-label="나의 갤러리 열기">갤러리</button><button type="button" id="helpBtn" class="icon-pill" aria-label="사용법">?</button></div>
     </header>
 
     <main class="main-layout">
@@ -172,7 +172,7 @@ const pretty=n=>String(n).padStart(2,'0');
 function timerElapsed(){return state.timerAccum+(state.running&&state.timerStart?Math.max(0,Math.floor((Date.now()-state.timerStart)/1000)):0)}
 function timerRender(){let elapsed=timerElapsed(),seconds=state.timerMin===0?elapsed:Math.max(0,state.timerMin*60-elapsed);$('timerText').textContent=`${pretty(Math.floor(seconds/60))}:${pretty(seconds%60)}`;$('timerDesc').textContent=state.running?'지금 이 순간, 나에게 집중하는 중':state.timerMin===0?'시간을 정하지 않고 자유롭게 집중하세요':'잠시 멈추고, 나만의 속도로.';let whole=state.completedSeconds;$('totalFocus').textContent=`${pretty(Math.floor(whole/3600))}시간 ${pretty(Math.floor(whole%3600/60))}분`;
  $('timerStart').innerHTML=state.running?'일시정지 <span>Ⅱ</span>':elapsed?'이어 집중하기 <span>→</span>':'집중 시작 <span>→</span>';
- if(state.running && state.timerMin>0 && elapsed>=state.timerMin*60 && !toastDone){toastDone=true;state.completedSeconds+=state.timerMin*60;setStorage('ocean-focus-seconds',state.completedSeconds);state.timerStart=null;state.running=false;state.timerAccum=0;world.act('idle');toast(`🎉 ${state.timerMin}분 집중을 완료하셨습니다!`);timerRender()}}
+ if(state.running && state.timerMin>0 && elapsed>=state.timerMin*60 && !toastDone){toastDone=true;state.completedSeconds+=state.timerMin*60;setStorage('ocean-focus-seconds',state.completedSeconds);state.timerStart=null;state.running=false;state.timerAccum=0;world.act('idle');toast(`🎉 ${state.timerMin}분 집중을 완료하셨습니다!`);window.dispatchEvent(new CustomEvent('od:focus-complete',{detail:{minutes:state.timerMin,sessionId:'focus-'+Date.now()}}));timerRender()}}
 function pauseTimer(){state.timerAccum=timerElapsed();state.running=false;state.timerStart=null;timerRender()}
 $('timerStart').addEventListener('click',()=>{if(!mustEnter())return;if(state.running){pauseTimer();toast('잠깐 쉬어도 괜찮습니다.');return}toastDone=false;state.running=true;state.timerStart=Date.now();setMode('focus');world.act('read');timerRender();toast('집중을 시작했습니다. 파이팅!')});
 $('timerReset').addEventListener('click',()=>{if(state.timerAccum>0||state.running){const elapsed=timerElapsed();state.completedSeconds+=elapsed;setStorage('ocean-focus-seconds',state.completedSeconds)}state.running=false;state.timerStart=null;state.timerAccum=0;toastDone=false;timerRender();toast('타이머를 초기화했습니다. 지난 집중 시간은 저장되었습니다.')});
@@ -417,5 +417,110 @@ oceanCanvas.addEventListener('pointercancel',()=>dragOcean=null);
 #viewSide button:focus-visible,#oceanFoot button:focus-visible{outline:3px solid #1c83af;outline-offset:3px}
 @media(max-width:740px){#oceanFocusHud{top:16%;padding:9px 18px}#oceanFocusHud strong{font-size:29px}#oceanTop{right:8px}#viewSide{right:10px;width:calc(100% - 20px)}}
 </style>
+
+<!-- Ocean Desk 2.0 focus-gallery MVP (test-only local rewards) -->
+<style>
+#odGallery,#odReward{border:0;padding:0;background:transparent;color:#1a3b47;max-width:min(92vw,860px);width:100%;max-height:92dvh}
+#odGallery::backdrop,#odReward::backdrop{background:#092c3dc7;backdrop-filter:blur(5px)}
+.od-card{background:#fbfdfc;border-radius:22px;overflow:hidden;box-shadow:0 20px 75px #0926356b}
+.od-head{display:flex;align-items:center;justify-content:space-between;padding:17px 22px;border-bottom:1px solid #e3eceb}
+.od-head strong{font-size:12px;letter-spacing:.14em;color:#266172}
+.od-close{background:#e8f0ee;border:0;border-radius:50%;height:34px;width:34px;font-size:21px;color:#255363}
+.od-hero{display:grid;grid-template-columns:1.15fr 1fr}
+.od-photo{min-height:350px;background:linear-gradient(175deg,#07334920,#082d3f91),url("https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1400&q=80") center/cover;display:flex;align-items:end;padding:20px}
+.od-photo span{color:white;background:#0c344ea6;border-radius:8px;font-size:11px;padding:8px 11px}
+.od-content{padding:26px;display:flex;flex-direction:column;gap:13px;justify-content:center}
+.od-content h2{font-size:27px;letter-spacing:-.05em;margin:0}.od-content p{font-size:12px;line-height:1.7;color:#729098;margin:0}
+.od-content label{font-size:11px;font-weight:800;color:#315663}
+.od-choice{display:flex;gap:7px}.od-choice button{flex:1;border:1px solid #cadddb;border-radius:9px;background:white;padding:11px 6px;font-weight:750;color:#365b65}
+.od-choice button[aria-pressed=true]{border-color:#60a8a6;background:#d9f0e9}
+.od-main{padding:14px;border:0;background:#226c7a;color:white;border-radius:11px;font-weight:800}
+.od-muted{font-size:10px!important;color:#8299a2!important}
+#odReward .od-card{padding-bottom:22px}#odReward .od-content{align-items:center;text-align:center;padding:24px}
+.od-pieces{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:min(100%,300px);margin:7px auto}
+.od-piece{height:43px;border:1px solid #c6d8d5;background:#eaf0ef;border-radius:8px;display:grid;place-items:center;color:#a2b9b6}
+.od-piece.earned{background:#b1dbd2;color:#174e57;border-color:#70aea3}
+#oceanOverlay.od-bali #photoView{background-image:linear-gradient(165deg,#bfe6fa38,#124d6373),url("https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1800&q=85")}
+@media(max-width:650px){.od-hero{grid-template-columns:1fr}.od-photo{min-height:190px}.od-content{padding:20px}.od-content h2{font-size:23px}}
+</style>
+<dialog id="odGallery" aria-label="나의 갤러리"><div class="od-card">
+ <div class="od-head"><strong>OCEAN DESK · MY GALLERY</strong><button class="od-close" id="odGalleryClose" type="button" aria-label="닫기">×</button></div>
+ <div class="od-hero">
+  <div class="od-photo" role="img" aria-label="발리 해변 미리보기 이미지"><span>발리 오션카페 · 테스트용 기본 해금</span></div>
+  <div class="od-content">
+   <h2>발리 오션카페</h2><p>푸른 바다와 함께 집중하세요. 이 공간은 MVP 테스트를 위해 누구나 입장할 수 있습니다.</p>
+   <label>집중 시간</label><div class="od-choice"><button id="od25" aria-pressed="true">25분</button><button id="od50" aria-pressed="false">50분</button></div>
+   <label>배경 사운드</label><div class="od-choice"><button id="odWaves" aria-pressed="true">파도 소리</button><button id="odMute" aria-pressed="false">무음</button></div>
+   <button id="odStudy" type="button" class="od-main">이 공간에서 공부하기 →</button>
+   <p class="od-muted">기존 뽀모도로·파도 소리 엔진을 그대로 사용합니다. 현재 풍경은 임시 이미지입니다.</p>
+  </div>
+ </div>
+</div></dialog>
+<dialog id="odReward" aria-label="집중 완료와 퍼즐 보상"><div class="od-card">
+ <div class="od-head"><strong>FOCUS COMPLETED</strong><button class="od-close" id="odRewardClose" type="button" aria-label="닫기">×</button></div>
+ <div class="od-content">
+  <h2>집중 완료!</h2><p id="odRewardTime">25분 동안 집중하셨습니다.</p><strong id="odProgress">퍼즐 0 / 10</strong>
+  <div class="od-pieces" id="odPieces" aria-label="퍼즐 획득 진행률"></div>
+  <p id="odTickets">여행 티켓 0장</p>
+  <button id="odClaim" type="button" class="od-main">테스트 퍼즐 1조각 받기</button>
+  <button id="odBackGallery" type="button" class="od-main" style="background:#dcebe8;color:#275a64">갤러리로 돌아가기</button>
+  <p class="od-muted">광고 연동 전 로컬 시뮬레이션입니다. 실제 광고 시청이나 현금 가치가 있는 보상은 없습니다.</p>
+ </div>
+</div></dialog>
+<script>
+(function(){
+'use strict';
+const el=id=>document.getElementById(id);
+const key='od-mvp-local-rewards-v1';
+const gallery=el('odGallery'), reward=el('odReward');
+let minutes=25,waves=true,currentSession=null;
+function read(){try{const x=JSON.parse(localStorage.getItem(key)||'{}');return {pieces:Math.max(0,Math.min(9,Number(x.pieces)||0)),tickets:Math.max(0,Number(x.tickets)||0),claims:Array.isArray(x.claims)?x.claims:[]}}catch{return {pieces:0,tickets:0,claims:[]}}}
+function save(x){try{localStorage.setItem(key,JSON.stringify(x))}catch{}}
+function choose(a,b,v){el(a).setAttribute('aria-pressed',String(v));el(b).setAttribute('aria-pressed',String(!v))}
+function renderReward(){let x=read();el('odProgress').textContent='퍼즐 '+x.pieces+' / 10';el('odTickets').textContent='보유 여행 티켓 '+x.tickets+'장';el('odPieces').replaceChildren(...Array.from({length:10},(_,i)=>{let d=document.createElement('span');d.className='od-piece'+(i<x.pieces?' earned':'');d.textContent=i<x.pieces?'◆':'◇';return d}));el('odClaim').disabled=!currentSession||x.claims.includes(currentSession)}
+el('odGalleryOpen').onclick=()=>gallery.showModal();
+el('odGalleryClose').onclick=()=>gallery.close();
+el('od25').onclick=()=>{minutes=25;choose('od25','od50',true)};
+el('od50').onclick=()=>{minutes=50;choose('od25','od50',false)};
+el('odWaves').onclick=()=>{waves=true;choose('odWaves','odMute',true)};
+el('odMute').onclick=()=>{waves=false;choose('odWaves','odMute',false)};
+el('odStudy').onclick=()=>{
+ if(state.running||timerElapsed()>0){gallery.close();toast('현재 집중을 마친 후 다른 공간으로 이동해 주세요.');return}
+ if(!state.entered){enter();if(!state.entered)return}
+ const preset=document.querySelector('[data-min="'+minutes+'"]');
+ if(!preset){toast('타이머 설정을 찾지 못했습니다.');return}
+ preset.click();
+ if(state.audioOn!==waves)el('soundToggle').click(); // user gesture, existing audio engine
+ try{localStorage.setItem('od-selected-environment',JSON.stringify({id:'bali-ocean-cafe',minutes,waves}))}catch{}
+ gallery.close();
+ const seat=SEATS[0];
+ if(!seat){toast('공부 공간을 찾지 못했습니다.');return}
+ openOceanView(seat.id); // existing ocean-view component
+ el('oceanOverlay').classList.add('od-bali');
+ el('oceanSeatLabel').textContent='발리 오션카페 · 집중 공간';
+ el('oceanSeatTag').textContent='BALI · FOCUS';
+ el('viewFocus').click(); // existing timerStart event, no second timer
+ syncOceanFocus();
+};
+for(const id of ['returnCafe','returnCafeBottom'])el(id).addEventListener('click',()=>el('oceanOverlay').classList.remove('od-bali'));
+window.addEventListener('od:focus-complete',e=>{
+ currentSession=e.detail.sessionId;
+ el('odRewardTime').textContent=e.detail.minutes+'분 집중을 완료했습니다.';
+ renderReward();
+ reward.showModal();
+});
+el('odClaim').onclick=()=>{
+ if(!currentSession)return;
+ let x=read();if(x.claims.includes(currentSession))return;
+ x.claims.push(currentSession);
+ if(x.pieces===9){x.pieces=0;x.tickets++}else{x.pieces++}
+ save(x);renderReward();toast(x.pieces===0?'퍼즐 완성! 여행 티켓 1장 획득':'테스트 퍼즐 1조각을 획득했습니다.');
+};
+el('odRewardClose').onclick=()=>reward.close();
+el('odBackGallery').onclick=()=>{reward.close();if(el('oceanOverlay').classList.contains('active'))leaveOcean();el('oceanOverlay').classList.remove('od-bali');gallery.showModal()};
+try{const stored=JSON.parse(localStorage.getItem('od-selected-environment')||'null');if(stored?.id==='bali-ocean-cafe'){minutes=stored.minutes===50?50:25;waves=stored.waves!==false;choose('od25','od50',minutes===25);choose('odWaves','odMute',waves)}}catch{}
+})();
+</script>
+
 </body>
 </html>
