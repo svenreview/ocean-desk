@@ -11,18 +11,24 @@ const status=$('odServerFocusStatus');
 const checkButton=$('odCheckFocusButton');
 const restoreButton=$('odRestoreFocusButton');
 let recovery=null;
+let activeUserId=null;
+let identityVersion=0;
 const say=(s)=>{if(status)status.textContent=s};
-const valid=()=>enabled&&typeof window.odAccountGetAccessToken==='function';
+const valid=()=>enabled&&Boolean(activeUserId)&&typeof window.odAccountGetAccessToken==='function';
 const endpoint=()=>config.url+'/functions/v1/od-focus-session';
 async function post(action,options={}){
+  if(!valid())throw Error('로그인되지 않았습니다.');
+  const owner=activeUserId,version=identityVersion;
+  const stillOwner=()=>activeUserId===owner&&identityVersion===version;
   const token=await window.odAccountGetAccessToken?.();
-  if(!token)throw Error('로그인되지 않았습니다.');
+  if(!token||!stillOwner())throw Error('로그인 계정이 변경됐습니다.');
   const res=await fetch(endpoint(),{
     method:'POST',
     headers:{'authorization':'Bearer '+token,'apikey':config.publishableKey,'content-type':'application/json'},
     body:JSON.stringify({action,...options})
   });
   const data=await res.json().catch(()=>({}));
+  if(!stillOwner())throw Error('로그인 계정이 변경됐습니다.');
   if(!res.ok)throw Error(data.error||'server_unavailable');
   return data;
 }
@@ -76,7 +82,7 @@ async function finish(minutes){
     if(result.verified===true)say('서버 집중 시간 확인 완료 · 광고 완료 검증 후 보상 신청 가능');
     else say('서버 집중 기록이 만료되어 보상 대상이 아닙니다.');
   }catch(e){
-    say('서버 집중 완료 확인 실패. 로컬 타이머 기록은 유지됩니다.');
+    if(nonce===state.epoch)say('서버 집중 완료 확인 실패. 로컬 타이머 기록은 유지됩니다.');
   }finally{if(nonce===state.epoch){state.session=null;state.pending=null;state.needsReset=true}}
 }
 window.addEventListener('od:timer-state',e=>{
@@ -97,15 +103,25 @@ function setRecoveryButtons(loggedIn){
   recovery=null;
 }
 window.addEventListener('od:account-session',e=>{
-  setRecoveryButtons(Boolean(e.detail?.loggedIn));
-  if(!e.detail?.loggedIn){state.session=null;state.pending=null;state.needsReset=true;state.epoch++}
+  const incoming=e.detail?.loggedIn===true?e.detail?.userId:null;
+  const nextUser=typeof incoming==='string'&&incoming?incoming:null;
+  if(nextUser!==activeUserId){
+    identityVersion++;
+    state.session=null;state.pending=null;state.needsReset=true;state.epoch++;
+    activeUserId=nextUser;
+    setRecoveryButtons(Boolean(nextUser));
+  }
+  // Same-account token refresh preserves active session and recovery candidate.
 });
 checkButton?.addEventListener('click',async()=>{
   if(!valid())return;
   checkButton.disabled=true;
   restoreButton.disabled=true;
+  const version=identityVersion;
   try{
-    recovery=await post('status');
+    const result=await post('status');
+    if(version!==identityVersion)return;
+    recovery=result;
     if(!recovery.active){
       say(recovery.expired?'서버 집중 세션이 만료됐습니다. 새로 시작해 주세요.':'진행 중인 서버 집중 세션이 없습니다.');
       return;
@@ -120,15 +136,18 @@ checkButton?.addEventListener('click',async()=>{
 restoreButton?.addEventListener('click',async()=>{
   if(!valid()||!recovery?.active)return;
   restoreButton.disabled=true;
+  const version=identityVersion;
   try{
     // Always re-check server time before restoring, never reuse stale timestamps.
     const latest=await post('status');
+    if(version!==identityVersion)return;
     if(!latest.active||latest.session_id!==recovery.session_id){
       recovery=null;say('서버 집중 상태가 변경되었습니다. 다시 확인해 주세요.');return;
     }
     const left=Math.max(0,Number(latest.remaining_seconds)||0);
     if(left===0){
       const result=await post('finish',{session_id:latest.session_id});
+      if(version!==identityVersion)return;
       say(result.verified?'서버 집중 완료가 확인되었습니다. 광고 검증은 별도입니다.':'집중 완료를 확인할 수 없습니다.');
       recovery=null;state.session=null;state.pending=null;state.needsReset=true;
       return;
