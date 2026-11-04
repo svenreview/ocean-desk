@@ -387,7 +387,11 @@ function setOceanMode(mode){
  ['viewAvatar','viewScene','viewRead','viewFocus'].forEach(id=>document.getElementById(id).classList.remove('chosen'));
  const chosen={avatar:'viewAvatar',scenery:'viewScene',reading:'viewRead',focus:'viewFocus'}[mode];
  if(chosen)document.getElementById(chosen).classList.add('chosen');
- hint.textContent={avatar:'3D 테라스 · 드래그하여 시점 변경',scenery:'산토리니의 푸른 바다를 감상하세요',reading:'한 권의 책과 함께하는 시간',focus:'파도와 함께 깊게 집중하는 시간'}[mode]||'';
+ const activeStudy=window.odActiveStudyScene;
+ const suffix={avatar:'시점을 움직여 풍경을 둘러보세요',scenery:'',reading:'책과 함께 머무는 시간',focus:'이 공간에서 집중하는 시간'}[mode]||'';
+ hint.textContent=activeStudy
+  ? [activeStudy.desc,suffix].filter(Boolean).join(' · ')
+  : ({avatar:'3D 테라스 · 드래그하여 시점 변경',scenery:'산토리니의 푸른 바다를 감상하세요',reading:'한 권의 책과 함께하는 시간',focus:'파도와 함께 깊게 집중하는 시간'}[mode]||'');
  document.getElementById('oceanOverlay').classList.toggle('reading-mode',mode==='reading');
  document.getElementById('oceanOverlay').classList.toggle('focus-mode',mode==='focus');
  document.getElementById('oceanFocusHud').hidden=mode!=='focus';
@@ -455,6 +459,20 @@ oceanCanvas.addEventListener('pointercancel',()=>dragOcean=null);
 @media(max-width:740px){#oceanFocusHud{top:16%;padding:9px 18px}#oceanFocusHud strong{font-size:29px}#oceanTop{right:8px}#viewSide{right:10px;width:calc(100% - 20px)}}
 </style>
 
+<style>
+@media(max-width:740px){
+ #oceanOverlay #viewSide{max-height:min(42dvh,280px);overflow-y:auto;overscroll-behavior:contain}
+ #oceanOverlay #oceanSeatLabel{max-width:70vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ #oceanOverlay #oceanFoot{max-width:calc(100vw - 20px);overflow-x:auto}
+ #oceanOverlay #oceanFocusHud{max-width:calc(100vw - 34px)}
+}
+@media(max-width:420px){
+ #oceanOverlay #viewSide{grid-template-columns:repeat(4,minmax(0,1fr))}
+ #oceanOverlay #viewSide button{min-height:44px;font-size:10px}
+ #oceanOverlay #viewSide .ocean-focus-presets{grid-column:span 2}
+ #oceanOverlay #oceanFoot{bottom:min(44dvh,290px)}
+}
+</style>
 <!-- Ocean Desk 2.0 focus-gallery MVP (test-only local rewards) -->
 <style>
 #odGallery,#odReward{border:0;padding:0;background:transparent;color:#1a3b47;max-width:min(92vw,860px);width:100%;max-height:92dvh}
@@ -539,19 +557,23 @@ function showScene(id){
  el('odScenePhoto').querySelector('span').textContent=s.region.toUpperCase()+' · '+s.rank+' · 획득 완료';
 }
 function clearStudyScene(){
+ window.odActiveStudyScene=null;
  el('oceanOverlay').classList.remove('od-bali','od-custom-scene');
  el('photoView').style.removeProperty('background-image');
+ el('photoView').setAttribute('aria-label','산토리니 오션뷰 풍경');
 }
 function applyStudyScene(id){
  const s=sceneById(id);
  clearStudyScene();
  if(!s)return;
+ window.odActiveStudyScene={id:s.id,name:s.name,desc:s.desc};
+ el('photoView').setAttribute('aria-label',s.name+' 풍경 미리보기');
  // Keep the existing 3D view and timer engine unchanged.
  if(id==='bali-ocean-cafe')el('oceanOverlay').classList.add('od-bali');
  else {el('oceanOverlay').classList.add('od-custom-scene');el('photoView').style.backgroundImage=sceneBackground(s)}
  el('oceanSeatLabel').textContent=s.name+' · 집중 공간';
  el('oceanSeatTag').textContent=s.region.toUpperCase()+' · FOCUS';
- el('viewModeHint').textContent=s.desc;
+ setOceanMode(oceanState.view);
 }
 function renderFrames(){
  const owned=availableScenes();
