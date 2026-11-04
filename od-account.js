@@ -34,6 +34,10 @@ if(!configured){
     client=createClient(config.url,config.publishableKey,{
       auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce'}
     });
+    window.odAccountGetAccessToken=async()=>{
+      const {data:{session},error}=await client.auth.getSession();
+      return error?null:(session?.access_token||null);
+    };
     const onAuth=async()=>{
       const {data:{user},error}=await client.auth.getUser();
       if(error||!user){
