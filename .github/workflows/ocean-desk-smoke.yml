@@ -10,6 +10,7 @@ on:
       - od-scenery.js
       - scripts/ocean-staging-preflight.mjs
       - scripts/ocean-preview-readiness.mjs
+      - scripts/ocean-preview-bundle.mjs
       - od-focus-sync.js
       - od-wallet-bootstrap.mjs
       - tests/**
@@ -34,6 +35,18 @@ jobs:
       - name: Verify local preview is safe to run (never deploy)
         run: node scripts/ocean-preview-readiness.mjs
       - name: Run auth and wallet helper unit tests
-        run: node --test tests/wallet-bootstrap.test.mjs tests/auth-flow.test.mjs tests/config-validator.test.mjs tests/staging-preflight.test.mjs tests/preview-readiness.test.mjs
+        run: node --test tests/wallet-bootstrap.test.mjs tests/auth-flow.test.mjs tests/config-validator.test.mjs tests/staging-preflight.test.mjs tests/preview-readiness.test.mjs tests/preview-bundle.test.mjs
       - name: Run Chromium smoke tests
         run: npx playwright test tests/ocean-desk.spec.mjs tests/auth-account.spec.mjs --browser=chromium --workers=1 --reporter=line
+      - name: Package free offline Preview files without deploying
+        run: |
+          node scripts/ocean-preview-bundle.mjs preview-package
+          cd preview-package
+          zip -q -r ../ocean-desk-local-preview.zip .
+      - name: Upload local demo archive (not a Vercel deployment)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ocean-desk-local-preview
+          path: ocean-desk-local-preview.zip
+          retention-days: 7
+          if-no-files-found: error
