@@ -630,13 +630,12 @@ window.addEventListener('od:server-collection',event=>{
    'Google 계정의 서버 컬렉션 · 읽기 전용 (추첨·보상 비활성)':
    '브라우저 로컬 테스트 컬렉션 · 서버 계정과 별도';
 });
-el('odNewRoomOpen').onclick=()=>{
- const id=el('odNewRoomOpen').dataset.scene;
- if(!id||!availableScenes().includes(id))return;
+window.odTravelDemo={renderMap,renderFrames,openRoom(id){
+ if(!id||!availableScenes().includes(id))return false;
  showScene(id);renderFrames();
- el('odMap').close();gallery.showModal();
-};
-window.odTravelDemo={renderMap,renderFrames};
+ gallery.showModal();
+ return true;
+}};
 renderFrames();
 
 function read(){if(serverCollection?.active)return {pieces:serverCollection.pieces,tickets:serverCollection.tickets,claims:[],owned:serverCollection.owned};try{const x=JSON.parse(localStorage.getItem(key)||'{}');return {pieces:Math.max(0,Math.min(9,Number(x.pieces)||0)),tickets:Math.max(0,Math.floor(Number(x.tickets)||0)),claims:Array.isArray(x.claims)?x.claims:[],owned:Array.isArray(x.owned)?x.owned.filter(v=>typeof v==='string'):[]}}catch{return {pieces:0,tickets:0,claims:[],owned:[]}}}
@@ -777,6 +776,12 @@ document.getElementById('odMapOpen').addEventListener('click',()=>{
  map.showModal();
 });
 document.getElementById('odMapClose').onclick=()=>map.close();
+document.getElementById('odNewRoomOpen').onclick=()=>{
+ const button=document.getElementById('odNewRoomOpen');
+ if(!button.dataset.scene)return;
+ map.close();
+ window.odTravelDemo.openRoom(button.dataset.scene);
+};
 document.getElementById('odMapToGallery').onclick=()=>{
  map.close();window.odTravelDemo.renderFrames();document.getElementById('odGallery').showModal()
 };
