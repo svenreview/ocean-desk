@@ -116,3 +116,27 @@ test('server focus sync stays disabled in default demo mode', async ({ page }) =
   await page.evaluate(() => {document.getElementById('timerStart').click(); document.getElementById('timerReset').click()});
   expect(calls).toHaveLength(0);
 });
+
+test('explicit server recovery event restores existing timer without awarding reward', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173/');
+  const before = await page.evaluate(() => {
+    let result = null;
+    window.addEventListener('od:restore-result', e => {result=e.detail.ok}, {once:true});
+    window.dispatchEvent(new CustomEvent('od:restore-server-focus',{detail:{minutes:50,elapsed:123}}));
+    return result;
+  });
+  expect(before).toBe(false);
+  await page.locator('#odGalleryOpen').click();
+  await page.locator('#odStudy').click();
+  await expect(page.locator('#oceanOverlay')).toHaveClass(/active/);
+  const accepted = await page.evaluate(() => {
+    let result = null;
+    window.addEventListener('od:restore-result',e=>{result=e.detail.ok},{once:true});
+    window.dispatchEvent(new CustomEvent('od:restore-server-focus',{detail:{minutes:50,elapsed:123}}));
+    return result;
+  });
+  expect(accepted).toBe(true);
+  await expect(page.locator('#timerText')).toHaveText('47:57');
+  await expect(page.locator('#timerStart')).toContainText('일시정지');
+  await expect(page.locator('#odAccountButton')).toBeAttached();
+});
