@@ -561,6 +561,15 @@ oceanCanvas.addEventListener('pointercancel',()=>dragOcean=null);
 <dialog id="odGallery" aria-label="나의 갤러리"><div class="od-card">
  <div class="od-head"><strong>OCEAN DESK · MY GALLERY</strong><button class="od-close" id="odGalleryClose" type="button" aria-label="닫기">×</button></div>
  <p id="odServerCollectionMode" role="status" aria-live="polite" style="padding:0 16px;font-size:12px;color:#537e84">브라우저 로컬 테스트 컬렉션 · 서버 계정과 별도</p>
+<section id="odDailySummary" class="od-daily-summary" aria-label="오늘의 집중 요약">
+ <div class="od-daily-heading"><strong>오늘의 집중</strong><span id="odDailyDate">이 브라우저의 완료 기록</span></div>
+ <div class="od-daily-grid">
+  <div><strong id="odTodayMinutes">0분</strong><small>오늘 완료한 집중</small></div>
+  <div><strong id="odTodaySessions">0회</strong><small>완료한 세션</small></div>
+  <div><strong id="odPuzzleRemaining">10조각</strong><small>다음 테스트 티켓까지</small></div>
+ </div>
+ <p id="odSummarySource">브라우저 테스트 기록 · 서버 계정과 별도</p>
+</section>
 <div id="odCollectionNav" class="od-collection-nav"><button id="odMapOpen" class="od-map-link" type="button">🌍 세계지도 · 여행 탐험</button><span id="odGalleryCount" aria-live="polite">내 컬렉션</span></div><div id="odGalleryFilters" class="od-gallery-filters" role="group" aria-label="갤러리 공간 필터"><button type="button" data-gallery-filter="all" aria-pressed="true">전체</button><button type="button" data-gallery-filter="owned" aria-pressed="false">획득</button><button type="button" data-gallery-filter="locked" aria-pressed="false">잠금</button></div><p id="odGalleryFilterStatus" class="od-gallery-filter-status" role="status" aria-live="polite">전체 공간</p><div class="od-collection-frames" id="odFrames" aria-label="집중 공간 목록"></div><div class="od-hero">
   <div class="od-photo" id="odScenePhoto" role="img" aria-label="선택한 공간 미리보기"><span>발리 오션카페 · 테스트용 기본 해금</span></div>
   <div class="od-content">
@@ -592,6 +601,36 @@ const gallery=el('odGallery'), reward=el('odReward');
 let minutes=25,waves=true,currentSession=null,selectedScene='bali-ocean-cafe';
 let serverCollection=null; // Authenticated read-only snapshot; NEVER copied to localStorage.
 let galleryFilter='all';
+const dailyKey='od-local-daily-focus-v1';
+function dayKey(date=new Date()){
+ return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
+}
+function loadDaily(){
+ try{
+  const raw=JSON.parse(localStorage.getItem(dailyKey)||'{}');
+  return raw&&typeof raw==='object'&&Array.isArray(raw.records)?raw.records.filter(v=>v&&typeof v.id==='string'&&typeof v.date==='string'&&[25,50].includes(v.minutes)).slice(-400):[];
+ }catch{return []}
+}
+function recordDailySession(detail){
+ if(serverCollection?.active)return;
+ const id=detail?.sessionId,minutes=detail?.minutes;
+ if(typeof id!=='string'||id.length>120||![25,50].includes(minutes))return;
+ const records=loadDaily();
+ if(records.some(r=>r.id===id))return;
+ records.push({id,date:dayKey(),minutes});
+ try{localStorage.setItem(dailyKey,JSON.stringify(records.slice(-400)))}catch{}
+}
+function renderDailySummary(){
+ const today=dayKey(),local=loadDaily().filter(r=>r.date===today);
+ const wallet=read(),server=Boolean(serverCollection?.active);
+ el('odTodayMinutes').textContent=server?'서버 기록 별도':local.reduce((sum,r)=>sum+r.minutes,0)+'분';
+ el('odTodaySessions').textContent=server?'계정에서 조회':local.length+'회';
+ el('odPuzzleRemaining').textContent=(10-wallet.pieces)+'조각';
+ el('odDailyDate').textContent=today+' · '+(server?'서버 컬렉션':'로컬 체험');
+ el('odSummarySource').textContent=server?
+  '퍼즐은 서버 조회값입니다. 오늘의 서버 집중 기록은 계정 화면에서 확인하세요.':
+  '이 브라우저에서 완료한 25·50분 세션만 집계합니다. 퍼즐은 테스트 보상이며 서버와 동기화되지 않습니다.';
+}
 
 const scenes=[
 {id:'santorini-terrace',region:'santorini',name:'산토리니 오션테라스',rank:'기본',color:'#b4d4df',desc:'지중해의 햇살이 머무는 오션테라스.'},
@@ -640,6 +679,7 @@ function applyStudyScene(id){
  setOceanMode(oceanState.view);
 }
 function renderFrames(){
+ renderDailySummary();
  const owned=availableScenes();
  const root=el('odFrames');root.replaceChildren();
  for(const s of scenes){
@@ -727,7 +767,7 @@ renderFrames();
 function read(){if(serverCollection?.active)return {pieces:serverCollection.pieces,tickets:serverCollection.tickets,claims:[],owned:serverCollection.owned};try{const x=JSON.parse(localStorage.getItem(key)||'{}');return {pieces:Math.max(0,Math.min(9,Number(x.pieces)||0)),tickets:Math.max(0,Math.floor(Number(x.tickets)||0)),claims:Array.isArray(x.claims)?x.claims:[],owned:Array.isArray(x.owned)?x.owned.filter(v=>typeof v==='string'):[]}}catch{return {pieces:0,tickets:0,claims:[],owned:[]}}}
 function save(x){if(serverCollection?.active)return;try{localStorage.setItem(key,JSON.stringify(x))}catch{}}
 function choose(a,b,v){el(a).setAttribute('aria-pressed',String(v));el(b).setAttribute('aria-pressed',String(!v))}
-function renderReward(){let x=read();el('odProgress').textContent='퍼즐 '+x.pieces+' / 10';el('odTickets').textContent='보유 여행 티켓 '+x.tickets+'장';el('odPieces').replaceChildren(...Array.from({length:10},(_,i)=>{let d=document.createElement('span');d.className='od-piece'+(i<x.pieces?' earned':'');d.textContent=i<x.pieces?'◆':'◇';return d}));el('odClaim').disabled=Boolean(serverCollection?.active)||!currentSession||x.claims.includes(currentSession);el('odClaim').textContent=serverCollection?.active?'서버 계정 보상은 검증 후 지급':'테스트 퍼즐 1조각 받기'}
+function renderReward(){let x=read();renderDailySummary();el('odProgress').textContent='퍼즐 '+x.pieces+' / 10';el('odTickets').textContent='보유 여행 티켓 '+x.tickets+'장';el('odPieces').replaceChildren(...Array.from({length:10},(_,i)=>{let d=document.createElement('span');d.className='od-piece'+(i<x.pieces?' earned':'');d.textContent=i<x.pieces?'◆':'◇';return d}));el('odClaim').disabled=Boolean(serverCollection?.active)||!currentSession||x.claims.includes(currentSession);el('odClaim').textContent=serverCollection?.active?'서버 계정 보상은 검증 후 지급':'테스트 퍼즐 1조각 받기'}
 document.querySelectorAll('[data-gallery-filter]').forEach(button=>{
  button.addEventListener('click',()=>{galleryFilter=button.dataset.galleryFilter;renderFrames()});
 });
@@ -755,6 +795,8 @@ el('odStudy').onclick=()=>{
 };
 for(const id of ['returnCafe','returnCafeBottom'])el(id).addEventListener('click',()=>clearStudyScene());
 window.addEventListener('od:focus-complete',e=>{
+ recordDailySession(e.detail);
+ renderDailySummary();
  currentSession=e.detail.sessionId;
  el('odRewardTime').textContent=e.detail.minutes+'분 집중을 완료했습니다.';
  renderReward();
@@ -803,6 +845,17 @@ try{const stored=JSON.parse(localStorage.getItem('od-selected-environment')||'nu
 .od-frame-thumbnail{display:block;aspect-ratio:16/9;background-position:center;background-size:cover;border-radius:6px;min-height:50px}
 .od-frame-text{display:flex;flex-direction:column;gap:2px;min-height:29px}.od-frame-text strong{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.od-frame-text small{font-size:9px;color:#739097}
 @media(max-width:650px){#odGallery .od-collection-frames{grid-template-columns:repeat(2,minmax(0,1fr));max-height:210px}.od-world-art{margin:12px 0 6px}}
+</style>
+<style>
+.od-daily-summary{padding:15px 20px;background:#edf7f4;border-bottom:1px solid #dcebe7;color:#245460}
+.od-daily-heading{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.od-daily-heading strong{font-size:15px}.od-daily-heading span{font-size:10px;color:#718b8f}
+.od-daily-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.od-daily-grid>div{background:#fff;border:1px solid #dbe9e6;border-radius:11px;padding:11px 8px;min-width:0;display:flex;flex-direction:column;gap:5px}
+.od-daily-grid strong{font-size:18px;color:#225e6b;word-break:keep-all}
+.od-daily-grid small{font-size:10px;line-height:1.45;color:#66828a}
+#odSummarySource{font-size:10px;color:#55757b;margin:10px 0 0;line-height:1.5}
+@media(max-width:420px){.od-daily-summary{padding:12px}.od-daily-grid strong{font-size:14px}.od-daily-grid small{font-size:9px}}
 </style>
 <style>
 #odNewRoomOpen[hidden]{display:none!important}
