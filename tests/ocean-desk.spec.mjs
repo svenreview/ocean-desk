@@ -415,3 +415,47 @@ test('reduced-motion environment removes scenery and lighting transitions withou
  await page.locator('#viewPause').click();
  await expect(page.locator('#viewPause')).toBeVisible();
 });
+
+
+test('mobile ocean control tray collapses and expands without changing timer, audio, scene, or light',async({page})=>{
+ await page.setViewportSize({width:360,height:740});
+ await page.goto('http://127.0.0.1:4173/');
+ await page.locator('#odGalleryOpen').click();
+ await page.locator('#odStudy').click();
+ await expect(page.locator('#odMobileControlsToggle')).toBeVisible();
+ await expect(page.locator('#odMobileControlsToggle')).toHaveAttribute('aria-expanded','true');
+ const before=await page.evaluate(()=>({running:state.running,minutes:state.timerMin,audio:state.audioOn,
+  scene:window.odActiveStudyScene?.id,lighting:document.getElementById('oceanOverlay').dataset.light}));
+ await page.locator('#odMobileControlsToggle').click();
+ await expect(page.locator('#odMobileControlsToggle')).toHaveAttribute('aria-expanded','false');
+ await expect(page.locator('#oceanOverlay')).toHaveClass(/od-mobile-controls-collapsed/);
+ await expect(page.locator('#viewSide')).toBeHidden();
+ await expect(page.locator('#oceanFocusHud')).toBeVisible();
+ const collapsed=await page.evaluate(()=>({running:state.running,minutes:state.timerMin,audio:state.audioOn,
+  scene:window.odActiveStudyScene?.id,lighting:document.getElementById('oceanOverlay').dataset.light}));
+ expect(collapsed).toEqual(before);
+ await page.locator('#odMobileControlsToggle').click();
+ await expect(page.locator('#odMobileControlsToggle')).toHaveAttribute('aria-expanded','true');
+ await expect(page.locator('#viewWaves')).toBeVisible();
+ await page.locator('#viewWaves').click();
+ await expect(page.locator('#viewWaves')).toHaveAttribute('aria-pressed','false');
+});
+
+test('mobile controls reset on leaving study and are not displayed on desktop',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('http://127.0.0.1:4173/');
+ await page.locator('#odGalleryOpen').click();
+ await page.locator('#odStudy').click();
+ await page.locator('#odMobileControlsToggle').click();
+ await expect(page.locator('#viewSide')).toBeHidden();
+ await page.locator('#oceanFoot').getByRole('button',{name:'정면'}).click();
+ await page.locator('#returnCafeBottom').click();
+ await expect(page.locator('#oceanOverlay')).not.toHaveClass(/active/);
+ await page.locator('#odGalleryOpen').click();
+ await page.locator('#odStudy').click();
+ await expect(page.locator('#odMobileControlsToggle')).toHaveAttribute('aria-expanded','true');
+ await expect(page.locator('#viewSide')).toBeVisible();
+ await page.setViewportSize({width:1200,height:840});
+ await expect(page.locator('#odMobileControlsToggle')).toBeHidden();
+ await expect(page.locator('#viewSide')).toBeVisible();
+});
