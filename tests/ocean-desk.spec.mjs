@@ -91,6 +91,7 @@ test('account module defaults to disabled and never imports demo rewards into se
   await expect(page.locator('#odAccountStatus')).toContainText('계정 연동은 아직 비활성화');
   await expect(page.locator('#odLoginButton')).toBeDisabled();
   await expect(page.locator('#odRefreshButton')).toBeDisabled();
+  await expect(page.locator('#odInitWalletButton')).toBeDisabled();
   await expect(page.locator('#odLogoutButton')).toBeDisabled();
   await expect(page.locator('#odServerBalance')).toContainText('로그인 후 조회');
   await expect(page.locator('#odServerScenes li')).toHaveCount(0);
