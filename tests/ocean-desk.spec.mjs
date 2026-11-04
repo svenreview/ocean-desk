@@ -205,3 +205,39 @@ test('switching duration after pausing retains accumulated time exactly once',as
   expect(result.running).toBe(false);
   await expect(page.locator('#odReward')).not.toBeVisible();
 });
+
+
+test('newly unlocked map room opens directly in gallery and stale result clears on reopen', async ({page})=>{
+  await page.goto('http://127.0.0.1:4173/');
+  await page.evaluate(()=>localStorage.setItem('od-mvp-local-rewards-v1',JSON.stringify({
+    pieces:0,tickets:1,claims:[],owned:[]
+  })));
+  await page.reload();
+  await page.locator('#odGalleryOpen').click();
+  await page.locator('#odMapOpen').click();
+  await expect(page.locator('#odNewRoomOpen')).toBeHidden();
+  await page.locator('#odRegions button').filter({hasText:'제주'}).click();
+  const drawn=await page.evaluate(()=>JSON.parse(localStorage.getItem('od-mvp-local-rewards-v1')).owned[0]);
+  await expect(page.locator('#odNewRoomOpen')).toBeVisible();
+  await page.locator('#odNewRoomOpen').click();
+  await expect(page.locator('#odGallery')).toBeVisible();
+  const chosen=await page.evaluate(()=>document.querySelector('#odFrames .od-frame.selected .od-frame-text strong')?.textContent);
+  expect(chosen).toBeTruthy();
+  await expect(page.locator('#odMap')).not.toBeVisible();
+  await page.locator('#odMapOpen').click();
+  await expect(page.locator('#odNewRoomOpen')).toBeHidden();
+  await expect(page.locator('#odTravelResult')).toHaveText('');
+  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('od-mvp-local-rewards-v1')).owned[0]);
+  expect(saved).toBe(drawn);
+});
+
+test('map direct-room action remains unavailable for signed-in server collection',async({page})=>{
+  await page.goto('http://127.0.0.1:4173/');
+  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('od:server-collection',{detail:{
+    active:true,userId:'test-account',pieces:0,tickets:3,owned:['jeju-forest']
+  }})));
+  await page.locator('#odGalleryOpen').click();
+  await page.locator('#odMapOpen').click();
+  await expect(page.locator('#odNewRoomOpen')).toBeHidden();
+  await expect(page.locator('#odRegions button').filter({hasText:'제주'})).toBeDisabled();
+});
