@@ -6,7 +6,8 @@ import {inspectLocalPreview} from './ocean-preview-readiness.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 export const STATIC_PREVIEW_ASSETS=Object.freeze([
  'index.html','od-scenery.js','od-runtime-config.js','od-account.js',
- 'od-focus-sync.js','od-auth-flow.mjs','od-wallet-bootstrap.mjs','od-config-validator.mjs'
+ 'od-focus-sync.js','od-auth-flow.mjs','od-wallet-bootstrap.mjs','od-config-validator.mjs',
+ 'ocean-local-server.py'
 ]);
 export function previewBundlePlan(files){
  const report=inspectLocalPreview(files);
@@ -21,13 +22,18 @@ export function buildPreviewBundle(outputDir){
  mkdirSync(target,{recursive:true});
  for(const name of plan.files)copyFileSync(resolve(root,name),resolve(target,name));
  writeFileSync(resolve(target,'README.txt'),
-  'OCEAN DESK LOCAL DEMO — 36th preview package\n\n'+
+  'OCEAN DESK LOCAL DEMO — 37th preview package\n\n'+
   'This archive is for local tests only. No Google OAuth or real rewards.\n'+
-  '1. Unzip all files into the same folder.\n'+
-  '2. Open a terminal in that folder.\n'+
-  '3. Run: python3 -m http.server 4173 --bind 127.0.0.1\n'+
-  '   Windows: py -m http.server 4173 --bind 127.0.0.1\n'+
-  '4. Open http://127.0.0.1:4173 in a browser on that PC.\n'+
+  '1. Unzip all files into the same folder.\\n'+
+  '2. Open a terminal in that folder.\\n'+
+  '3. PC-only: py ocean-local-server.py (Windows) or python3 ocean-local-server.py (macOS/Linux).\\n'+
+  '4. PC URL: http://127.0.0.1:4173/\\n'+
+  '5. Phone on SAME TRUSTED PRIVATE Wi-Fi: stop server and restart with --lan.\\n'+
+  '   Windows: py ocean-local-server.py --lan\\n'+
+  '   macOS/Linux: python3 ocean-local-server.py --lan\\n'+
+  '6. The script prints POSSIBLE phone URLs. Check your PC private Wi-Fi IP and firewall.\\n'+
+  '7. Never use public Wi-Fi, port forwarding or internet exposure. Stop with Ctrl+C.\\n'+
+  '8. PC and phone local records are separate.\\n'+
   'Use HTTP server, not file://; JS modules require an HTTP origin.\n'+
   'No production site, Supabase database, or account settings are changed.\n'
  ,'utf8');
