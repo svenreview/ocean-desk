@@ -445,10 +445,10 @@ oceanCanvas.addEventListener('pointercancel',()=>dragOcean=null);
 </style>
 <dialog id="odGallery" aria-label="나의 갤러리"><div class="od-card">
  <div class="od-head"><strong>OCEAN DESK · MY GALLERY</strong><button class="od-close" id="odGalleryClose" type="button" aria-label="닫기">×</button></div>
- <div class="od-hero">
-  <div class="od-photo" role="img" aria-label="발리 해변 미리보기 이미지"><span>발리 오션카페 · 테스트용 기본 해금</span></div>
+ <div id="odCollectionNav" class="od-collection-nav"><button id="odMapOpen" class="od-map-link" type="button">🌍 세계지도 · 여행 탐험</button><span id="odGalleryCount" aria-live="polite">내 컬렉션</span></div><div class="od-collection-frames" id="odFrames" aria-label="획득한 집중 공간"></div><div class="od-hero">
+  <div class="od-photo" id="odScenePhoto" role="img" aria-label="선택한 공간 미리보기"><span>발리 오션카페 · 테스트용 기본 해금</span></div>
   <div class="od-content">
-   <h2>발리 오션카페</h2><p>푸른 바다와 함께 집중하세요. 이 공간은 MVP 테스트를 위해 누구나 입장할 수 있습니다.</p>
+   <h2 id="odSceneTitle">발리 오션카페</h2><p id="odSceneDesc">푸른 바다와 함께 집중하세요. 이 공간은 MVP 테스트를 위해 누구나 입장할 수 있습니다.</p>
    <label>집중 시간</label><div class="od-choice"><button id="od25" aria-pressed="true">25분</button><button id="od50" aria-pressed="false">50분</button></div>
    <label>배경 사운드</label><div class="od-choice"><button id="odWaves" aria-pressed="true">파도 소리</button><button id="odMute" aria-pressed="false">무음</button></div>
    <button id="odStudy" type="button" class="od-main">이 공간에서 공부하기 →</button>
@@ -473,12 +473,100 @@ oceanCanvas.addEventListener('pointercancel',()=>dragOcean=null);
 const el=id=>document.getElementById(id);
 const key='od-mvp-local-rewards-v1';
 const gallery=el('odGallery'), reward=el('odReward');
-let minutes=25,waves=true,currentSession=null;
-function read(){try{const x=JSON.parse(localStorage.getItem(key)||'{}');return {pieces:Math.max(0,Math.min(9,Number(x.pieces)||0)),tickets:Math.max(0,Number(x.tickets)||0),claims:Array.isArray(x.claims)?x.claims:[]}}catch{return {pieces:0,tickets:0,claims:[]}}}
+let minutes=25,waves=true,currentSession=null,selectedScene='bali-ocean-cafe';
+
+const scenes=[
+{id:'santorini-terrace',region:'santorini',name:'산토리니 오션테라스',rank:'기본',color:'#b4d4df',desc:'지중해의 햇살이 머무는 오션테라스.'},
+{id:'santorini-sunset',region:'santorini',name:'산토리니 선셋카페',rank:'희귀',color:'#eac3a5',desc:'저녁 노을을 바라보는 조용한 카페.'},
+{id:'santorini-night',region:'santorini',name:'산토리니 나이트룸',rank:'특별',color:'#345775',desc:'별이 뜨는 지중해의 야간 공부방.'},
+{id:'bali-ocean-cafe',region:'bali',name:'발리 오션카페',rank:'기본',color:'#6dbbad',desc:'푸른 바다를 바라보는 열대 카페.'},
+{id:'bali-sunset',region:'bali',name:'발리 선셋룸',rank:'희귀',color:'#e5a77e',desc:'바다 너머로 노을이 퍼지는 공간.'},
+{id:'bali-forest',region:'bali',name:'발리 레인포레스트 카페',rank:'특별',color:'#729f82',desc:'빗소리와 초록빛이 머무는 숲속 카페.'},
+{id:'jeju-coast',region:'jeju',name:'제주 해안카페',rank:'기본',color:'#85c6cb',desc:'제주의 푸른 바다를 닮은 공간.'},
+{id:'jeju-forest',region:'jeju',name:'제주 숲속서재',rank:'희귀',color:'#8ab2a3',desc:'숲속의 책상에서 나만의 시간을.'},
+{id:'jeju-rain',region:'jeju',name:'제주 레인카페',rank:'특별',color:'#8ea3b7',desc:'창밖에 비가 내리는 조용한 카페.'}
+];
+const regions=[{id:'bali',name:'발리',emoji:'🌴'},{id:'jeju',name:'제주',emoji:'🌊'},{id:'santorini',name:'산토리니',emoji:'🏛️'}];
+function sceneById(id){return scenes.find(s=>s.id===id)}
+function availableScenes(){return ['santorini-terrace','bali-ocean-cafe',...read().owned]}
+function sceneBackground(s){return s.id==='bali-ocean-cafe'?'linear-gradient(165deg,#1546531f,#082d3f77),url("https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1800&q=85")':'linear-gradient(140deg,'+s.color+',#153f51)'}
+function showScene(id){
+ const s=sceneById(id);if(!s||!availableScenes().includes(id))return;
+ selectedScene=id;
+ el('odSceneTitle').textContent=s.name;
+ el('odSceneDesc').textContent=s.desc;
+ el('odScenePhoto').style.backgroundImage=sceneBackground(s);
+ el('odScenePhoto').querySelector('span').textContent=s.region.toUpperCase()+' · '+s.rank+' · 획득 완료';
+}
+function clearStudyScene(){
+ el('oceanOverlay').classList.remove('od-bali','od-custom-scene');
+ el('photoView').style.removeProperty('background-image');
+}
+function applyStudyScene(id){
+ const s=sceneById(id);
+ clearStudyScene();
+ if(!s)return;
+ // Keep the existing 3D view and timer engine unchanged.
+ if(id==='bali-ocean-cafe')el('oceanOverlay').classList.add('od-bali');
+ else {el('oceanOverlay').classList.add('od-custom-scene');el('photoView').style.backgroundImage=sceneBackground(s)}
+ el('oceanSeatLabel').textContent=s.name+' · 집중 공간';
+ el('oceanSeatTag').textContent=s.region.toUpperCase()+' · FOCUS';
+ el('viewModeHint').textContent=s.desc;
+}
+function renderFrames(){
+ const owned=availableScenes();
+ const root=el('odFrames');root.replaceChildren();
+ for(const s of scenes){
+   const button=document.createElement('button');
+   const unlocked=owned.includes(s.id);
+   button.type='button';button.className='od-frame'+(unlocked?'':' locked')+(selectedScene===s.id?' selected':'');
+   button.disabled=!unlocked;button.textContent=(unlocked?'▣ ':'🔒 ')+s.name;
+   button.title=unlocked?s.desc:'여행 탐험으로 획득하세요';
+   button.onclick=()=>{showScene(s.id);renderFrames()};
+   root.appendChild(button);
+ }
+ el('odGalleryCount').textContent=owned.length+' / '+scenes.length+' 공간';
+ showScene(selectedScene);
+}
+function renderMap(){
+ const w=read(),owned=availableScenes();
+ el('odMapTickets').textContent='🎟 여행 티켓 '+w.tickets+'장';
+ el('odMapTotal').textContent=owned.length+' / '+scenes.length+' 공간 수집';
+ const root=el('odRegions');root.replaceChildren();
+ regions.forEach(r=>{
+  const regionScenes=scenes.filter(s=>s.region===r.id),remaining=regionScenes.filter(s=>!owned.includes(s.id));
+  const btn=document.createElement('button');btn.type='button';
+  btn.className='od-region'+(remaining.length===0?' od-complete':'');
+  btn.disabled=!w.tickets||!remaining.length;
+  const ico=document.createElement('span');ico.className='od-region-emoji';ico.textContent=r.emoji;
+  const name=document.createElement('strong');name.textContent=r.name;
+  const status=document.createElement('span');status.className='od-region-progress';
+  status.textContent=(regionScenes.length-remaining.length)+'/3 수집 · '+(remaining.length===0?'완성!':w.tickets?'탐험하기':'티켓 필요');
+  btn.append(ico,name,status);btn.onclick=()=>drawRegion(r.id);
+  root.appendChild(btn);
+ });
+}
+function drawRegion(region){
+ const w=read(),owned=availableScenes(),pool=scenes.filter(s=>s.region===region&&!owned.includes(s.id));
+ if(!pool.length||w.tickets<1){renderMap();return;}
+ // Unique only; uniform among remaining scenes for MVP (no rarity weights).
+ const random=new Uint32Array(1);
+ if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(random);
+ else random[0]=Math.floor(Math.random()*4294967296);
+ const selected=pool[random[0]%pool.length];
+ w.tickets--;w.owned.push(selected.id);save(w);
+ const result=el('odTravelResult');result.classList.add('visible');
+ result.textContent='🎉 새로운 공간 획득: '+selected.name+' ('+selected.rank+') · 갤러리에 추가되었습니다.';
+ renderMap();renderFrames();toast(selected.name+'을(를) 획득했습니다!');
+}
+window.odTravelDemo={renderMap,renderFrames};
+renderFrames();
+
+function read(){try{const x=JSON.parse(localStorage.getItem(key)||'{}');return {pieces:Math.max(0,Math.min(9,Number(x.pieces)||0)),tickets:Math.max(0,Math.floor(Number(x.tickets)||0)),claims:Array.isArray(x.claims)?x.claims:[],owned:Array.isArray(x.owned)?x.owned.filter(v=>typeof v==='string'):[]}}catch{return {pieces:0,tickets:0,claims:[],owned:[]}}}
 function save(x){try{localStorage.setItem(key,JSON.stringify(x))}catch{}}
 function choose(a,b,v){el(a).setAttribute('aria-pressed',String(v));el(b).setAttribute('aria-pressed',String(!v))}
 function renderReward(){let x=read();el('odProgress').textContent='퍼즐 '+x.pieces+' / 10';el('odTickets').textContent='보유 여행 티켓 '+x.tickets+'장';el('odPieces').replaceChildren(...Array.from({length:10},(_,i)=>{let d=document.createElement('span');d.className='od-piece'+(i<x.pieces?' earned':'');d.textContent=i<x.pieces?'◆':'◇';return d}));el('odClaim').disabled=!currentSession||x.claims.includes(currentSession)}
-el('odGalleryOpen').onclick=()=>gallery.showModal();
+el('odGalleryOpen').onclick=()=>{renderFrames();gallery.showModal()};
 el('odGalleryClose').onclick=()=>gallery.close();
 el('od25').onclick=()=>{minutes=25;choose('od25','od50',true)};
 el('od50').onclick=()=>{minutes=50;choose('od25','od50',false)};
@@ -491,18 +579,16 @@ el('odStudy').onclick=()=>{
  if(!preset){toast('타이머 설정을 찾지 못했습니다.');return}
  preset.click();
  if(state.audioOn!==waves)el('soundToggle').click(); // user gesture, existing audio engine
- try{localStorage.setItem('od-selected-environment',JSON.stringify({id:'bali-ocean-cafe',minutes,waves}))}catch{}
+ try{localStorage.setItem('od-selected-environment',JSON.stringify({id:selectedScene,minutes,waves}))}catch{}
  gallery.close();
  const seat=SEATS[0];
  if(!seat){toast('공부 공간을 찾지 못했습니다.');return}
  openOceanView(seat.id); // existing ocean-view component
- el('oceanOverlay').classList.add('od-bali');
- el('oceanSeatLabel').textContent='발리 오션카페 · 집중 공간';
- el('oceanSeatTag').textContent='BALI · FOCUS';
+ applyStudyScene(selectedScene);
  el('viewFocus').click(); // existing timerStart event, no second timer
  syncOceanFocus();
 };
-for(const id of ['returnCafe','returnCafeBottom'])el(id).addEventListener('click',()=>el('oceanOverlay').classList.remove('od-bali'));
+for(const id of ['returnCafe','returnCafeBottom'])el(id).addEventListener('click',()=>clearStudyScene());
 window.addEventListener('od:focus-complete',e=>{
  currentSession=e.detail.sessionId;
  el('odRewardTime').textContent=e.detail.minutes+'분 집중을 완료했습니다.';
@@ -518,7 +604,61 @@ el('odClaim').onclick=()=>{
 };
 el('odRewardClose').onclick=()=>reward.close();
 el('odBackGallery').onclick=()=>{reward.close();if(el('oceanOverlay').classList.contains('active'))leaveOcean();el('oceanOverlay').classList.remove('od-bali');gallery.showModal()};
-try{const stored=JSON.parse(localStorage.getItem('od-selected-environment')||'null');if(stored?.id==='bali-ocean-cafe'){minutes=stored.minutes===50?50:25;waves=stored.waves!==false;choose('od25','od50',minutes===25);choose('odWaves','odMute',waves)}}catch{}
+try{const stored=JSON.parse(localStorage.getItem('od-selected-environment')||'null');if(stored?.id&&sceneById(stored.id)){selectedScene=stored.id;minutes=stored.minutes===50?50:25;waves=stored.waves!==false;choose('od25','od50',minutes===25);choose('odWaves','odMute',waves);showScene(selectedScene)}}catch{}
+})();
+</script>
+
+
+<style>
+.od-collection-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 20px;background:#f3f8f6;border-bottom:1px solid #e0ece9}
+.od-map-link{border:0;background:#226c7a;color:#fff;padding:11px 13px;border-radius:10px;font-weight:800;font-size:12px}
+#odGalleryCount{font-size:11px;color:#67888d}
+.od-collection-frames{padding:12px 18px;display:flex;gap:8px;overflow-x:auto}
+.od-frame{flex:0 0 auto;background:#fff;border:2px solid #d5e4e0;color:#2c5864;border-radius:10px;padding:8px 12px;font-size:11px;max-width:172px;overflow:hidden;text-overflow:ellipsis}
+.od-frame.selected{border-color:#358d92;background:#e6f5f1}
+.od-frame.locked{opacity:.5}
+#odMap{border:0;padding:0;max-width:min(94vw,920px);width:100%;max-height:92dvh;background:transparent}
+#odMap::backdrop{background:#092c3dd1;backdrop-filter:blur(6px)}
+.od-map-layout{padding:20px;background:linear-gradient(140deg,#e1f2ef,#f8fbf6);border-radius:0 0 22px 22px}
+.od-map-layout p{color:#56767f;font-size:12px;line-height:1.6}
+.od-regions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:17px 0}
+.od-region{border:1px solid #c6dcd9;border-radius:15px;padding:18px 12px;min-height:160px;background:#fff;text-align:left;display:flex;flex-direction:column;gap:10px;color:#214b56}
+.od-region strong{font-size:17px}.od-region .od-region-emoji{font-size:30px}.od-region .od-region-progress{font-size:11px;color:#688b92}
+.od-region:disabled{opacity:.7}
+.od-region.od-complete{background:#e6f4eb}
+.od-map-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+#odTravelResult{padding:15px;background:#e7f3ee;border-radius:12px;display:none;line-height:1.6}
+#odTravelResult.visible{display:block}
+.od-map-disclaimer{font-size:10px!important;color:#849ba1!important}
+#odGallery .od-photo{background-position:center;background-size:cover}
+@media(max-width:650px){.od-regions{grid-template-columns:1fr}.od-region{min-height:92px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center}.od-region .od-region-emoji{grid-row:span 2}.od-map-layout{padding:15px}.od-collection-nav{padding:10px}}
+</style>
+<dialog id="odMap" aria-label="세계지도 지역 탐험">
+<div class="od-card">
+<div class="od-head"><strong>OCEAN DESK WORLD · 여행 지도</strong><button id="odMapClose" class="od-close" aria-label="닫기" type="button">×</button></div>
+<div class="od-map-layout">
+<h2 style="margin:0;color:#204c58;font-size:24px">공부할수록 세계가 열립니다</h2>
+<p>여행 티켓으로 원하는 지역을 선택하면, 그 지역에서 아직 모으지 못한 공부 공간 하나를 획득합니다.</p>
+<div class="od-map-footer"><strong id="odMapTickets" aria-live="polite">여행 티켓 0장</strong><span id="odMapTotal">0 / 9 공간 수집</span></div>
+<div class="od-regions" id="odRegions"></div>
+<div id="odTravelResult" role="status" aria-live="polite"></div>
+<p class="od-map-disclaimer">테스트용 로컬 컬렉션입니다. 추첨은 브라우저에서 실행되며 서버 검증·실제 광고·계정 연동은 아직 없습니다. 지역별 남은 후보 중 무작위로 지급하며 중복 지급은 방지합니다.</p>
+<button class="od-main" id="odMapToGallery" type="button">나의 갤러리 보기 →</button>
+</div></div></dialog>
+<script>
+(function(){
+'use strict';
+// This small controller coordinates the existing MVP controller using a shared module.
+const map=document.getElementById('odMap');
+document.getElementById('odMapOpen').addEventListener('click',()=>{
+ document.getElementById('odGallery').close();
+ window.odTravelDemo.renderMap();
+ map.showModal();
+});
+document.getElementById('odMapClose').onclick=()=>map.close();
+document.getElementById('odMapToGallery').onclick=()=>{
+ map.close();window.odTravelDemo.renderFrames();document.getElementById('odGallery').showModal()
+};
 })();
 </script>
 
