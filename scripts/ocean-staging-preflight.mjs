@@ -11,10 +11,10 @@ export function inspectStaging({url,publishableKey,origin,googleClientId}){
     const u=new URL(url);
     projectRef=u.hostname.endsWith('.supabase.co')?u.hostname.slice(0,-'.supabase.co'.length):null;
   }catch{failures.push('invalid_project_url')}
-  try{site=new URL(origin)}catch{failures.push('invalid_site_origin')}
+  try{site=new URL(origin);if(site.href!==site.origin+'/')failures.push('site_origin_must_be_exact')}catch{failures.push('invalid_site_origin')}
   if(!projectRef||projectRef===LIVE_PROJECT_REF)failures.push('staging_project_required');
   if(site?.origin===LIVE_SITE_ORIGIN)failures.push('production_site_not_allowed');
-  if(!googleClientId||!googleClientId.endsWith('.apps.googleusercontent.com'))
+  if(typeof googleClientId!=='string'||!/^[0-9]+-[a-zA-Z0-9_-]+\.apps\.googleusercontent\.com$/.test(googleClientId))
     failures.push('google_oauth_client_id_missing');
   const normalized=site?.origin||origin;
   const result=validateRuntimeConfig({
@@ -28,10 +28,9 @@ export function inspectStaging({url,publishableKey,origin,googleClientId}){
     summary:{
       stagingProjectValidated:Boolean(projectRef&&projectRef!==LIVE_PROJECT_REF),
       stagingOriginValidated:Boolean(site&&site.origin!==LIVE_SITE_ORIGIN&&result.ok),
-      oauthClientIdProvided:Boolean(googleClientId?.endsWith('.apps.googleusercontent.com')),
-      secretsExposed:false,
-      databaseModified:false,
-      oauthVerified:false
+      oauthClientIdFormatValid:typeof googleClientId==='string'&&/^[0-9]+-[a-zA-Z0-9_-]+\.apps\.googleusercontent\.com$/.test(googleClientId),
+      networkOrDatabaseActionsPerformed:false,
+      actualGoogleOAuthTested:false
     }
   };
 }
