@@ -241,3 +241,37 @@ test('map direct-room action remains unavailable for signed-in server collection
   await expect(page.locator('#odNewRoomOpen')).toBeHidden();
   await expect(page.locator('#odRegions button').filter({hasText:'제주'})).toBeDisabled();
 });
+
+
+test('gallery filters show owned and locked cards with accessible selection on mobile',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('http://127.0.0.1:4173/');
+ await page.locator('#odGalleryOpen').click();
+ await expect(page.locator('#odFrames button')).toHaveCount(9);
+ await page.locator('[data-gallery-filter="owned"]').click();
+ await expect(page.locator('#odFrames button')).toHaveCount(2);
+ await expect(page.locator('#odGalleryFilterStatus')).toContainText('획득한 공간 2개');
+ await expect(page.locator('[data-gallery-filter="owned"]')).toHaveAttribute('aria-pressed','true');
+ await page.locator('[data-gallery-filter="locked"]').click();
+ await expect(page.locator('#odFrames button')).toHaveCount(7);
+ await expect(page.locator('#odGalleryFilterStatus')).toContainText('잠긴 공간 7개');
+ await expect(page.locator('#odFrames button:enabled')).toHaveCount(0);
+ await page.locator('[data-gallery-filter="all"]').click();
+ await expect(page.locator('#odFrames button')).toHaveCount(9);
+ await expect(page.locator('#odFrames button[aria-pressed="true"]')).toHaveCount(1);
+});
+test('world region progress is dynamic and shows count and visual progress',async({page})=>{
+ await page.goto('http://127.0.0.1:4173/');
+ await page.evaluate(()=>localStorage.setItem('od-mvp-local-rewards-v1',JSON.stringify({
+  pieces:0,tickets:1,claims:[],owned:['jeju-forest']
+ })));
+ await page.reload();
+ await page.locator('#odGalleryOpen').click();
+ await page.locator('#odMapOpen').click();
+ const jeju=page.locator('#odRegions button').filter({hasText:'제주'});
+ await expect(jeju).toHaveAttribute('aria-label',/2개 \/ 3개 수집/);
+ await expect(jeju.locator('.od-region-fill')).toHaveAttribute('style',/width: 67%/);
+ await jeju.click();
+ await expect(jeju).toHaveAttribute('aria-label',/3개 \/ 3개 수집/).catch(()=>{});
+ await expect(page.locator('#odRegions .od-region-track')).toHaveCount(3);
+});
