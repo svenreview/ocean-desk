@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - index.html
+      - od-account.js
+      - od-focus-sync.js
       - tests/**
       - .github/workflows/ocean-desk-smoke.yml
   workflow_dispatch:
