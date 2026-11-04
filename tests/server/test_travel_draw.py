@@ -91,3 +91,37 @@ except psycopg.Error as exc:
 assert balance(uid4)==1
 
 print("PASS ACL, idempotent retries, parallel draw, collection complete, no duplicate awards, validation")
+
+
+# RLS: a logged-in account sees only its own wallet and collection.
+# The JWT claim in this disposable test is simulated via a connection setting;
+# it is not a substitute for end-to-end Supabase Auth integration.
+def visible_rows(statement, acting_uid):
+    with psycopg.connect(DSN) as conn:
+        conn.execute("SET ROLE authenticated")
+        conn.execute("SELECT set_config('request.jwt.claim.sub', %s, true)", (str(acting_uid),))
+        return conn.execute(statement).fetchall()
+
+# The two users already created above own different wallets and scenes.
+for acting_uid in (uid, uid2):
+    rows=visible_rows("SELECT user_id, tickets FROM public.od_wallets",acting_uid)
+    assert len(rows)==1 and rows[0][0]==acting_uid, rows
+    scenes=visible_rows("SELECT user_id, environment_id FROM public.od_owned_environments",acting_uid)
+    assert scenes and all(row[0]==acting_uid for row in scenes), scenes
+    claims=visible_rows("SELECT user_id FROM public.od_reward_claims",acting_uid)
+    assert all(row[0]==acting_uid for row in claims), claims
+    draws=visible_rows("SELECT user_id FROM public.od_travel_draws",acting_uid)
+    assert draws and all(row[0]==acting_uid for row in draws), draws
+
+# A missing JWT subject must yield no user-scoped records.
+with psycopg.connect(DSN) as conn:
+    conn.execute("SET ROLE authenticated")
+    assert conn.execute("SELECT count(*) FROM public.od_wallets").fetchone()[0]==0
+    assert conn.execute("SELECT count(*) FROM public.od_owned_environments").fetchone()[0]==0
+
+# Public/anonymous access to account tables is not granted.
+for table in ("od_wallets","od_owned_environments","od_reward_claims","od_travel_draws"):
+    assert not query("SELECT has_table_privilege('anon', %s, 'SELECT')",("public."+table,))[0]
+    assert query("SELECT has_table_privilege('authenticated', %s, 'SELECT')",("public."+table,))[0]
+
+print("PASS RLS: own records visible, other users denied, unauthenticated claim hidden, anon denied")
