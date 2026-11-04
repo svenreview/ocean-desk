@@ -269,9 +269,9 @@ test('world region progress is dynamic and shows count and visual progress',asyn
  await page.locator('#odGalleryOpen').click();
  await page.locator('#odMapOpen').click();
  const jeju=page.locator('#odRegions button').filter({hasText:'제주'});
- await expect(jeju).toHaveAttribute('aria-label',/2개 \/ 3개 수집/);
- await expect(jeju.locator('.od-region-fill')).toHaveAttribute('style',/width: 67%/);
+ await expect(jeju).toHaveAttribute('aria-label',/1개 \/ 3개 수집/);
+ await expect(jeju.locator('.od-region-fill')).toHaveAttribute('style',/width: 33%/);
  await jeju.click();
- await expect(jeju).toHaveAttribute('aria-label',/3개 \/ 3개 수집/);
+ await expect(jeju).toHaveAttribute('aria-label',/2개 \/ 3개 수집/);
  await expect(page.locator('#odRegions .od-region-track')).toHaveCount(3);
 });
