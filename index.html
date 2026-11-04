@@ -603,7 +603,7 @@ el('odClaim').onclick=()=>{
  save(x);renderReward();toast(x.pieces===0?'퍼즐 완성! 여행 티켓 1장 획득':'테스트 퍼즐 1조각을 획득했습니다.');
 };
 el('odRewardClose').onclick=()=>reward.close();
-el('odBackGallery').onclick=()=>{reward.close();if(el('oceanOverlay').classList.contains('active'))leaveOcean();el('oceanOverlay').classList.remove('od-bali');gallery.showModal()};
+el('odBackGallery').onclick=()=>{reward.close();if(el('oceanOverlay').classList.contains('active'))leaveOcean();clearStudyScene();renderFrames();gallery.showModal()};
 try{const stored=JSON.parse(localStorage.getItem('od-selected-environment')||'null');if(stored?.id&&sceneById(stored.id)){selectedScene=stored.id;minutes=stored.minutes===50?50:25;waves=stored.waves!==false;choose('od25','od50',minutes===25);choose('odWaves','odMute',waves);showScene(selectedScene)}}catch{}
 })();
 </script>
