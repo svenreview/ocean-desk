@@ -521,3 +521,51 @@ test('daily dashboard resets display for another local calendar date and ignores
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('od:focus-complete',{detail:{minutes:10,sessionId:'bad-duration'}})));
  await expect(page.locator('#odTodaySessions')).toHaveText('0회');
 });
+
+
+test('weekly statistics dedupe completed sessions and count streak over date boundaries',async({page})=>{
+ await page.goto('http://127.0.0.1:4173/');
+ await page.evaluate(()=>{
+  const day=n=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-n);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
+  localStorage.setItem('od-local-daily-focus-v1',JSON.stringify({records:[
+   {id:'today-a',date:day(0),minutes:25},{id:'today-b',date:day(0),minutes:50},
+   {id:'yesterday',date:day(1),minutes:25},{id:'yesterday',date:day(1),minutes:25},
+   {id:'twodays',date:day(2),minutes:50},{id:'old',date:day(8),minutes:50},
+   {id:'invalid',date:day(3),minutes:600}
+  ]}));
+ });
+ await page.reload();await page.locator('#odGalleryOpen').click();
+ await expect(page.locator('#odWeeklyTotal')).toHaveText('150분 · 4회');
+ await expect(page.locator('#odFocusStreak')).toHaveText('연속 3일');
+ await expect(page.locator('#odWeeklyChart [role="listitem"]')).toHaveCount(7);
+ await expect(page.locator('#odWeeklyChart [role="listitem"]').last()).toHaveAttribute('aria-label',/75분 2회/);
+});
+
+test('weekly streak continues from yesterday and stops at a day gap',async({page})=>{
+ await page.goto('http://127.0.0.1:4173/');
+ await page.evaluate(()=>{
+  const day=n=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-n);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
+  localStorage.setItem('od-local-daily-focus-v1',JSON.stringify({records:[
+   {id:'y',date:day(1),minutes:25},{id:'two',date:day(2),minutes:25},{id:'four',date:day(4),minutes:50}
+  ]}));
+ });
+ await page.reload();await page.locator('#odGalleryOpen').click();
+ await expect(page.locator('#odFocusStreak')).toHaveText('연속 2일');
+ await expect(page.locator('#odWeeklyTotal')).toHaveText('100분 · 3회');
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('od:focus-complete',{detail:{minutes:50,sessionId:'now'}})));
+ await expect(page.locator('#odFocusStreak')).toHaveText('연속 3일');
+});
+
+test('server weekly snapshot hides local focus history and mobile chart remains inside viewport',async({page})=>{
+ await page.setViewportSize({width:360,height:740});await page.goto('http://127.0.0.1:4173/');
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('od:focus-complete',{detail:{minutes:25,sessionId:'local-week'}})));
+ await page.locator('#odRewardClose').click();await page.locator('#odGalleryOpen').click();
+ await expect(page.locator('#odWeeklyTotal')).toHaveText('25분 · 1회');
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('od:server-collection',{detail:{active:true,pieces:2,tickets:1,owned:['jeju-coast']}})));
+ await expect(page.locator('#odWeeklyTotal')).toHaveText('서버 기록 별도');
+ await expect(page.locator('#odWeeklyChart [role="listitem"]')).toHaveCount(0);
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('od:server-collection',{detail:{active:false}})));
+ await expect(page.locator('#odWeeklyTotal')).toHaveText('25분 · 1회');
+ const rect=await page.locator('#odWeeklySummary').evaluate(el=>({left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right,width:innerWidth}));
+ expect(rect.left).toBeGreaterThanOrEqual(-1);expect(rect.right).toBeLessThanOrEqual(rect.width+1);
+});
