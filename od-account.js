@@ -10,6 +10,7 @@ const emailInput=qs('odAccountEmail');
 const login=qs('odLoginButton');
 const logout=qs('odLogoutButton');
 const refresh=qs('odRefreshButton');
+const initWallet=qs('odInitWalletButton');
 const balance=qs('odServerBalance');
 const sceneList=qs('odServerScenes');
 const configured=Boolean(config.enabled && /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(config.url||'')
@@ -24,7 +25,7 @@ const clearServer=()=>{
 accountButton.addEventListener('click',()=>accountDialog.showModal());
 qs('odAccountClose').addEventListener('click',()=>accountDialog.close());
 if(!configured){
-  login.disabled=true;refresh.disabled=true;logout.disabled=true;
+  login.disabled=true;refresh.disabled=true;logout.disabled=true;initWallet.disabled=true;
   setStatus('계정 연동은 아직 비활성화 상태입니다. 로컬 퍼즐·티켓은 테스트 기록입니다.');
 }else{
   try{
@@ -36,11 +37,11 @@ if(!configured){
     const onAuth=async()=>{
       const {data:{user},error}=await client.auth.getUser();
       if(error||!user){
-        clearServer();logout.disabled=true;refresh.disabled=true;login.disabled=false;
+        clearServer();logout.disabled=true;refresh.disabled=true;initWallet.disabled=true;login.disabled=false;
         setStatus('로그인되지 않았습니다. 이메일로 로그인 링크를 받을 수 있습니다.');
         return;
       }
-      login.disabled=true;logout.disabled=false;refresh.disabled=false;
+      login.disabled=true;logout.disabled=false;refresh.disabled=false;initWallet.disabled=false;
       setStatus('로그인: '+(user.email || '사용자')+' · 서버 기록 읽기 전용');
       await readServer(user.id);
     };
@@ -77,6 +78,25 @@ if(!configured){
         setStatus('이메일로 로그인 링크를 요청했습니다. 메일을 확인해 주세요.');
       }catch(e){setStatus('로그인 링크 발송 실패: '+(e?.message||'오류'));}
       finally{login.disabled=false}
+    });
+    initWallet.addEventListener('click',async()=>{
+      // Explicit action only, never automatic. No demo balance is copied to server.
+      initWallet.disabled=true;
+      setStatus('서버 지갑 초기화 요청 중입니다.');
+      try {
+        const {data:{session},error:sessionError}=await client.auth.getSession();
+        if(sessionError||!session?.access_token)throw new Error('로그인이 필요합니다.');
+        const response=await fetch(config.url+'/functions/v1/od-wallet-initialize',{
+          method:'POST',
+          headers:{'authorization':'Bearer '+session.access_token,
+                   'apikey':config.publishableKey,'content-type':'application/json'},
+          body:'{}'
+        });
+        if(!response.ok)throw new Error('서버 지갑 초기화에 실패했습니다.');
+        const {data:{user}}=await client.auth.getUser();
+        if(user?.id)await readServer(user.id);
+      }catch(e){setStatus('지갑 준비 실패: '+(e?.message||'오류'))}
+      finally{initWallet.disabled=false}
     });
     logout.addEventListener('click',async()=>{
       const {error}=await client.auth.signOut();
