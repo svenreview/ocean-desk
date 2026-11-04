@@ -520,7 +520,14 @@ function renderFrames(){
    const button=document.createElement('button');
    const unlocked=owned.includes(s.id);
    button.type='button';button.className='od-frame'+(unlocked?'':' locked')+(selectedScene===s.id?' selected':'');
-   button.disabled=!unlocked;button.textContent=(unlocked?'▣ ':'🔒 ')+s.name;
+   button.disabled=!unlocked;
+   const thumbnail=document.createElement('span');thumbnail.className='od-frame-thumbnail';
+   thumbnail.style.backgroundImage=sceneBackground(s);
+   thumbnail.setAttribute('aria-hidden','true');
+   const info=document.createElement('span');info.className='od-frame-text';
+   const title=document.createElement('strong');title.textContent=(unlocked?'':'🔒 ')+s.name;
+   const rank=document.createElement('small');rank.textContent=unlocked?s.rank+' · 입장 가능':'아직 획득하지 않은 공간';
+   info.append(title,rank);button.append(thumbnail,info);
    button.title=unlocked?s.desc:'여행 탐험으로 획득하세요';
    button.onclick=()=>{showScene(s.id);renderFrames()};
    root.appendChild(button);
@@ -632,6 +639,12 @@ try{const stored=JSON.parse(localStorage.getItem('od-selected-environment')||'nu
 .od-map-disclaimer{font-size:10px!important;color:#849ba1!important}
 #odGallery .od-photo{background-position:center;background-size:cover}
 @media(max-width:650px){.od-regions{grid-template-columns:1fr}.od-region{min-height:92px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center}.od-region .od-region-emoji{grid-row:span 2}.od-map-layout{padding:15px}.od-collection-nav{padding:10px}}
+.od-world-art{margin:18px 0 6px;overflow:hidden;border-radius:16px;border:1px solid #c8ded8;box-shadow:0 9px 24px #21495712}.od-world-art svg{width:100%;height:auto;display:block}
+#odGallery .od-collection-frames{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));max-height:290px;overflow-y:auto;gap:10px}
+#odGallery .od-frame{max-width:none;min-width:0;padding:6px;display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:7px}
+.od-frame-thumbnail{display:block;aspect-ratio:16/9;background-position:center;background-size:cover;border-radius:6px;min-height:50px}
+.od-frame-text{display:flex;flex-direction:column;gap:2px;min-height:29px}.od-frame-text strong{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.od-frame-text small{font-size:9px;color:#739097}
+@media(max-width:650px){#odGallery .od-collection-frames{grid-template-columns:repeat(2,minmax(0,1fr));max-height:210px}.od-world-art{margin:12px 0 6px}}
 </style>
 <dialog id="odMap" aria-label="세계지도 지역 탐험">
 <div class="od-card">
@@ -640,6 +653,27 @@ try{const stored=JSON.parse(localStorage.getItem('od-selected-environment')||'nu
 <h2 style="margin:0;color:#204c58;font-size:24px">공부할수록 세계가 열립니다</h2>
 <p>여행 티켓으로 원하는 지역을 선택하면, 그 지역에서 아직 모으지 못한 공부 공간 하나를 획득합니다.</p>
 <div class="od-map-footer"><strong id="odMapTickets" aria-live="polite">여행 티켓 0장</strong><span id="odMapTotal">0 / 9 공간 수집</span></div>
+<div class="od-world-art" role="img" aria-label="지역 위치를 간략하게 표현한 일러스트 지도. 실제 축척이나 정확한 지도가 아닙니다.">
+<svg viewBox="0 0 750 268" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<defs><linearGradient id="odSea" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c9e7e6"/><stop offset="1" stop-color="#eff7eb"/></linearGradient></defs>
+<rect width="750" height="268" fill="url(#odSea)" rx="18"/>
+<g fill="#e5ebdd" stroke="#aecac0" stroke-width="1.5" opacity=".97">
+<path d="M52 58 94 31 153 26 187 57 172 84 196 105 170 124 141 115 126 156 104 145 90 105 58 93Z"/>
+<path d="m170 149 32 8 27 31-13 44-19 19-16-39-28-35Z"/>
+<path d="M314 49 352 37 386 47 404 72 388 94 355 103 326 85Z"/>
+<path d="m353 100 43 8 29 45-19 67-38 30-16-33-25-43Z"/>
+<path d="m416 46 70-23 92 12 36 30 66-12 37 35-45 24-39 37-45-10-28 32-38-18-24 10-20-41-62-14Z"/>
+<path d="m573 186 40-11 36 16 15 33-41 18-50-16Z"/>
+</g>
+<g stroke="#6faaa6" stroke-width="2" fill="none" stroke-dasharray="5 7"><path d="M369 82 Q457 18 573 100"/><path d="M573 100 Q578 149 529 181"/></g>
+<g fill="#1d7378" stroke="#fff" stroke-width="4">
+<circle cx="369" cy="82" r="9"/><circle cx="573" cy="100" r="9"/><circle cx="529" cy="181" r="9"/>
+</g>
+<g font-size="15" font-weight="750" fill="#214b55">
+<text x="337" y="67">산토리니</text><text x="584" y="95">제주</text><text x="539" y="185">발리</text>
+</g>
+<text x="20" y="248" font-size="11" fill="#62868c">OCEAN DESK · EXPLORE THE WORLD</text>
+</svg></div>
 <div class="od-regions" id="odRegions"></div>
 <div id="odTravelResult" role="status" aria-live="polite"></div>
 <p class="od-map-disclaimer">테스트용 로컬 컬렉션입니다. 추첨은 브라우저에서 실행되며 서버 검증·실제 광고·계정 연동은 아직 없습니다. 지역별 남은 후보 중 무작위로 지급하며 중복 지급은 방지합니다.</p>
