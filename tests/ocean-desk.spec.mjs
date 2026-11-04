@@ -569,3 +569,57 @@ test('server weekly snapshot hides local focus history and mobile chart remains 
  const rect=await page.locator('#odWeeklySummary').evaluate(el=>({left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right,width:innerWidth}));
  expect(rect.left).toBeGreaterThanOrEqual(-1);expect(rect.right).toBeLessThanOrEqual(rect.width+1);
 });
+
+
+test('weekly goal is adjustable and preserved across reload, without changing puzzle wallet',async({page})=>{
+ await page.goto('http://127.0.0.1:4173/');
+ await page.evaluate(()=>{
+  const d=new Date(),date=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+  localStorage.setItem('od-local-daily-focus-v1',JSON.stringify({records:[
+   {id:'goal-1',date,minutes:50},{id:'goal-2',date,minutes:50},{id:'goal-3',date,minutes:50}
+  ]}));
+ });
+ await page.reload();
+ await page.locator('#odGalleryOpen').click();
+ await expect(page.locator('#odWeeklyGoal')).toHaveValue('150');
+ await expect(page.locator('#odGoalText')).toHaveText('150 / 150분 · 100% 달성');
+ await expect(page.locator('#odGoalProgress')).toHaveAttribute('value','150');
+ await page.locator('#odWeeklyGoal').selectOption('300');
+ await expect(page.locator('#odGoalText')).toHaveText('150 / 300분 · 50%');
+ expect(await page.evaluate(()=>localStorage.getItem('od-weekly-goal-v1'))).toBe('300');
+ await expect(page.locator('#odPuzzleRemaining')).toHaveText('10조각');
+ await page.reload();await page.locator('#odGalleryOpen').click();
+ await expect(page.locator('#odWeeklyGoal')).toHaveValue('300');
+ await expect(page.locator('#odGoalText')).toHaveText('150 / 300분 · 50%');
+});
+
+test('streak badges unlock at thresholds without issuing any tickets or puzzles',async({page})=>{
+ await page.goto('http://127.0.0.1:4173/');
+ await page.evaluate(()=>{
+  const records=Array.from({length:14},(_,i)=>{
+   const date=new Date();date.setHours(12,0,0,0);date.setDate(date.getDate()-i);
+   return {id:'streak-'+i,date:[date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-'),minutes:25};
+  });
+  localStorage.setItem('od-local-daily-focus-v1',JSON.stringify({records}));
+ });
+ await page.reload();await page.locator('#odGalleryOpen').click();
+ await expect(page.locator('#odFocusStreak')).toHaveText('연속 14일');
+ await expect(page.locator('.od-streak-badge.earned')).toHaveCount(3);
+ await expect(page.locator('#odWeeklyTotal')).toHaveText('175분 · 7회');
+ await expect(page.locator('#odPuzzleRemaining')).toHaveText('10조각');
+ expect(await page.evaluate(()=>localStorage.getItem('od-mvp-local-rewards-v1'))).toBeNull();
+});
+
+test('server collection does not expose local goal and badges or overwrite saved preferences',async({page})=>{
+ await page.goto('http://127.0.0.1:4173/');
+ await page.locator('#odGalleryOpen').click();
+ await page.locator('#odWeeklyGoal').selectOption('600');
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('od:server-collection',{detail:{active:true,pieces:4,tickets:2,owned:[]}})));
+ await expect(page.locator('#odGoalPanel')).toBeHidden();
+ await expect(page.locator('#odStreakBadges')).toBeHidden();
+ await expect(page.locator('#odWeeklyTotal')).toHaveText('서버 기록 별도');
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('od:server-collection',{detail:{active:false}})));
+ await expect(page.locator('#odGoalPanel')).toBeVisible();
+ await expect(page.locator('#odWeeklyGoal')).toHaveValue('600');
+ await expect(page.locator('#odStreakBadges .od-streak-badge')).toHaveCount(3);
+});
