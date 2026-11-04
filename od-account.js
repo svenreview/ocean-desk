@@ -3,7 +3,9 @@
 // No local demo balances are ever uploaded to Supabase.
 import {createWalletBootstrap} from './od-wallet-bootstrap.mjs';
 import {createAuthEpoch,startGoogleSignIn} from './od-auth-flow.mjs';
-const config=window.OD_SUPABASE_CONFIG || {};
+import {validateRuntimeConfig} from './od-config-validator.mjs';
+const validation=validateRuntimeConfig(window.OD_SUPABASE_CONFIG,window.location.origin);
+const config=validation.config;
 const qs=id=>document.getElementById(id);
 const accountButton=qs('odAccountButton');
 const accountDialog=qs('odAccountDialog');
@@ -17,8 +19,7 @@ const initWallet=qs('odInitWalletButton');
 const balance=qs('odServerBalance');
 const sceneList=qs('odServerScenes');
 const sessionsList=qs('odServerSessions');
-const configured=Boolean(config.enabled && /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(config.url||'')
- && typeof config.publishableKey==='string' && /^(sb_publishable_|eyJ)/.test(config.publishableKey));
+const configured=validation.ok&&config.enabled;
 let client=null;
 let unsubscribe=null;
 let authenticatedId=null;
@@ -36,7 +37,7 @@ accountButton.addEventListener('click',()=>accountDialog.showModal());
 qs('odAccountClose').addEventListener('click',()=>accountDialog.close());
 if(!configured){
   login.disabled=true;googleLogin.disabled=true;refresh.disabled=true;logout.disabled=true;initWallet.disabled=true;
-  setStatus('계정 연동은 아직 비활성화 상태입니다. 로컬 퍼즐·티켓은 테스트 기록입니다.');
+  setStatus(validation.ok?'계정 연동은 아직 비활성화 상태입니다. 로컬 퍼즐·티켓은 테스트 기록입니다.':'계정 설정 검사 실패 ('+validation.reason+'). 안전을 위해 연동을 비활성화했습니다.');
 }else{
   try{
     // Pinned SDK ESM version. Keep the import off until a deployment is explicitly configured.
