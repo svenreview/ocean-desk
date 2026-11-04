@@ -239,6 +239,7 @@ setInterval(()=>{timerRender();const d=new Date();$('clockLabel').textContent=d.
 <div id="oceanOverlay" role="dialog" aria-label="선택한 자리의 3D 바다 전망">
 <div id="photoView" aria-label="산토리니 고화질 오션뷰 이미지"></div><div id="oceanLightOverlay" aria-hidden="true"></div><canvas id="oceanGL"></canvas><div id="oceanError"></div>
 <div id="oceanTop"><strong id="oceanSeatLabel">산토리니 오션뷰</strong><button id="returnCafe">← 2D 카페로</button></div>
+<button id="odMobileControlsToggle" type="button" aria-controls="viewSide" aria-expanded="true" aria-label="집중 조작 메뉴 접기">조작 메뉴 접기</button>
 <aside id="viewSide" aria-label="오션뷰 조작 메뉴">
   <div class="view-side-title">MY OCEAN DESK <span>✦</span></div>
   <button id="viewAvatar" type="button"><span class="side-ico">♙</span> 캐릭터 보기</button>
@@ -365,15 +366,28 @@ function oceanEngine(){
  oceanState.engine={draw};return oceanState.engine;
 }
 function openOceanView(id){const seat=SEATS.find(x=>x.id===id);if(!seat){toast('좌석을 선택해 주세요');return}
+ setMobileOceanControls(true);
  const i=SEATS.filter(x=>x.kind===seat.kind).findIndex(x=>x.id===id);oceanState.seat=seat;oceanState.yaw=(i-2.5)*.10;
  document.getElementById('oceanSeatLabel').textContent=(seat.kind==='study'?'📚 스터디 ':'☕ 카페 ')+id+'  · 산토리니 테라스 오션뷰';
  document.getElementById('oceanOverlay').classList.add('active');document.getElementById('oceanSeatTag').textContent=id+' · '+(seat.kind==='study'?'STUDY':'CAFE');setOceanMode('scenery');}
-function leaveOcean(){document.getElementById('oceanOverlay').classList.remove('active');oceanState.view='scenery';if(state.seat){state.seat=null;world.stand();$('seatCount').textContent='0/12';$('worldHint').textContent='다시 자유롭게 이동하세요'}}
+function leaveOcean(){setMobileOceanControls(true);document.getElementById('oceanOverlay').classList.remove('active');oceanState.view='scenery';if(state.seat){state.seat=null;world.stand();$('seatCount').textContent='0/12';$('worldHint').textContent='다시 자유롭게 이동하세요'}}
 for(const id of ['returnCafe','returnCafeBottom'])document.getElementById(id).addEventListener('click',leaveOcean);
 document.getElementById('oceanStraight').onclick=()=>{oceanState.yaw=0;updatePhotoAngle()};
 document.getElementById('oceanLeft').onclick=()=>{oceanState.yaw=Math.max(-.65,oceanState.yaw-.17);updatePhotoAngle()};
 document.getElementById('oceanRight').onclick=()=>{oceanState.yaw=Math.min(.65,oceanState.yaw+.17);updatePhotoAngle()};
 
+function setMobileOceanControls(expanded){
+ const overlay=document.getElementById('oceanOverlay');
+ const button=document.getElementById('odMobileControlsToggle');
+ overlay.classList.toggle('od-mobile-controls-collapsed',!expanded);
+ button.setAttribute('aria-expanded',String(expanded));
+ button.setAttribute('aria-label',expanded?'집중 조작 메뉴 접기':'집중 조작 메뉴 펼치기');
+ button.textContent=expanded?'조작 메뉴 접기':'조작 메뉴 펼치기';
+}
+document.getElementById('odMobileControlsToggle').onclick=()=>{
+ const expanded=document.getElementById('odMobileControlsToggle').getAttribute('aria-expanded')!=='true';
+ setMobileOceanControls(expanded);
+};
 function updatePhotoAngle(){
  const pv=document.getElementById('photoView');
  const shift= Math.round(oceanState.yaw*70);
@@ -504,6 +518,18 @@ oceanCanvas.addEventListener('pointercancel',()=>dragOcean=null);
 #viewLight:focus-visible{outline:3px solid #1c83af;outline-offset:3px}
 @media (prefers-reduced-motion:reduce){
  #oceanLightOverlay,#photoView{transition:none!important;animation:none!important}
+}
+</style>
+<style>
+#odMobileControlsToggle{display:none}
+@media(max-width:740px){
+ #oceanOverlay #odMobileControlsToggle{display:block;position:absolute;z-index:25;top:calc(12px + env(safe-area-inset-top));right:12px;border:1px solid #ffffffb9;border-radius:12px;background:#153a4ddc;color:#fff;padding:10px 12px;font-size:12px;font-weight:800;min-height:42px;box-shadow:0 6px 19px #143b4b55}
+ #oceanOverlay #oceanTop{right:135px;max-width:calc(100vw - 145px)}
+ #oceanOverlay #oceanSeatLabel{max-width:100%;font-size:11px}
+ #oceanOverlay.od-mobile-controls-collapsed #viewSide{display:none}
+ #oceanOverlay.od-mobile-controls-collapsed #oceanFoot{bottom:calc(12px + env(safe-area-inset-bottom));max-width:calc(100vw - 20px)}
+ #oceanOverlay.od-mobile-controls-collapsed #oceanFocusHud{top:20%}
+ #odMobileControlsToggle:focus-visible{outline:3px solid #b6e7e7;outline-offset:3px}
 }
 </style>
 <script src="./od-scenery.js"></script>
