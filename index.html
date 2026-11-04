@@ -604,6 +604,8 @@ function drawRegion(region){
  w.tickets--;w.owned.push(selected.id);save(w);
  const result=el('odTravelResult');result.classList.add('visible');
  result.textContent='🎉 새로운 공간 획득: '+selected.name+' ('+selected.rank+') · 갤러리에 추가되었습니다.';
+ const openNew=el('odNewRoomOpen');openNew.hidden=false;openNew.dataset.scene=selected.id;
+ openNew.textContent=selected.name+' · 바로 보기 →';
  renderMap();renderFrames();toast(selected.name+'을(를) 획득했습니다!');
 }
 window.addEventListener('od:server-collection',event=>{
@@ -618,6 +620,12 @@ window.addEventListener('od:server-collection',event=>{
    'Google 계정의 서버 컬렉션 · 읽기 전용 (추첨·보상 비활성)':
    '브라우저 로컬 테스트 컬렉션 · 서버 계정과 별도';
 });
+el('odNewRoomOpen').onclick=()=>{
+ const id=el('odNewRoomOpen').dataset.scene;
+ if(!id||!availableScenes().includes(id))return;
+ showScene(id);renderFrames();
+ el('odMap').close();gallery.showModal();
+};
 window.odTravelDemo={renderMap,renderFrames};
 renderFrames();
 
@@ -728,6 +736,7 @@ try{const stored=JSON.parse(localStorage.getItem('od-selected-environment')||'nu
 </svg></div>
 <div class="od-regions" id="odRegions"></div>
 <div id="odTravelResult" role="status" aria-live="polite"></div>
+<button id="odNewRoomOpen" type="button" class="od-main" hidden>새로 획득한 공간 보기 →</button>
 <p class="od-map-disclaimer">테스트용 로컬 컬렉션입니다. 추첨은 브라우저에서 실행되며 서버 검증·실제 광고·계정 연동은 아직 없습니다. 지역별 남은 후보 중 무작위로 지급하며 중복 지급은 방지합니다.</p>
 <button class="od-main" id="odMapToGallery" type="button">나의 갤러리 보기 →</button>
 </div></div></dialog>
@@ -738,6 +747,8 @@ try{const stored=JSON.parse(localStorage.getItem('od-selected-environment')||'nu
 const map=document.getElementById('odMap');
 document.getElementById('odMapOpen').addEventListener('click',()=>{
  document.getElementById('odGallery').close();
+ const result=document.getElementById('odTravelResult');result.textContent='';result.classList.remove('visible');
+ const openNew=document.getElementById('odNewRoomOpen');openNew.hidden=true;openNew.removeAttribute('data-scene');
  window.odTravelDemo.renderMap();
  map.showModal();
 });
