@@ -461,3 +461,63 @@ test('mobile controls reset on leaving study and are not displayed on desktop',a
  await expect(page.locator('#odMobileControlsToggle')).toBeHidden();
  await expect(page.locator('#viewSide')).toBeVisible();
 });
+
+
+test('daily dashboard counts only completed focus attempts once and persists after reload',async({page})=>{
+ await page.goto('http://127.0.0.1:4173/');
+ await page.locator('#odGalleryOpen').click();
+ await expect(page.locator('#odTodayMinutes')).toHaveText('0분');
+ await expect(page.locator('#odTodaySessions')).toHaveText('0회');
+ await expect(page.locator('#odPuzzleRemaining')).toHaveText('10조각');
+ await page.locator('#odGalleryClose').click();
+ await page.evaluate(()=>{
+  window.dispatchEvent(new CustomEvent('od:focus-complete',{detail:{minutes:25,sessionId:'dashboard-session-1'}}));
+  window.dispatchEvent(new CustomEvent('od:focus-complete',{detail:{minutes:25,sessionId:'dashboard-session-1'}}));
+  window.dispatchEvent(new CustomEvent('od:focus-complete',{detail:{minutes:50,sessionId:'dashboard-session-2'}}));
+ });
+ await expect(page.locator('#odTodayMinutes')).toHaveText('75분');
+ await expect(page.locator('#odTodaySessions')).toHaveText('2회');
+ const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('od-local-daily-focus-v1')).records);
+ expect(saved).toHaveLength(2);
+ await page.reload();
+ await page.locator('#odGalleryOpen').click();
+ await expect(page.locator('#odTodayMinutes')).toHaveText('75분');
+ await expect(page.locator('#odTodaySessions')).toHaveText('2회');
+});
+
+test('puzzle summary reflects test claims and keeps server wallet and local records isolated',async({page})=>{
+ await page.goto('http://127.0.0.1:4173/');
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('od:focus-complete',{detail:{minutes:25,sessionId:'puzzle-summary-1'}})));
+ await page.locator('#odClaim').click();
+ await page.locator('#odRewardClose').click();
+ await page.locator('#odGalleryOpen').click();
+ await expect(page.locator('#odPuzzleRemaining')).toHaveText('9조각');
+ await expect(page.locator('#odTodaySessions')).toHaveText('1회');
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('od:server-collection',{detail:{active:true,pieces:7,tickets:3,owned:['jeju-coast']}})));
+ await expect(page.locator('#odPuzzleRemaining')).toHaveText('3조각');
+ await expect(page.locator('#odTodayMinutes')).toHaveText('서버 기록 별도');
+ await expect(page.locator('#odTodaySessions')).toHaveText('계정에서 조회');
+ await expect(page.locator('#odSummarySource')).toContainText('서버');
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('od:focus-complete',{detail:{minutes:25,sessionId:'server-snapshot-no-local-claim'}})));
+ const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('od-local-daily-focus-v1')).records);
+ expect(stored).toHaveLength(1);
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('od:server-collection',{detail:{active:false}})));
+ await expect(page.locator('#odPuzzleRemaining')).toHaveText('9조각');
+ await expect(page.locator('#odTodaySessions')).toHaveText('1회');
+});
+
+test('daily dashboard resets display for another local calendar date and ignores invalid sessions',async({page})=>{
+ await page.goto('http://127.0.0.1:4173/');
+ await page.evaluate(()=>{
+  localStorage.setItem('od-local-daily-focus-v1',JSON.stringify({records:[
+   {id:'old-focus',date:'2025-01-01',minutes:25},
+   {id:'invalid',date:'2025-01-01',minutes:300}
+  ]}));
+ });
+ await page.reload();
+ await page.locator('#odGalleryOpen').click();
+ await expect(page.locator('#odTodayMinutes')).toHaveText('0분');
+ await expect(page.locator('#odTodaySessions')).toHaveText('0회');
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('od:focus-complete',{detail:{minutes:10,sessionId:'bad-duration'}})));
+ await expect(page.locator('#odTodaySessions')).toHaveText('0회');
+});
