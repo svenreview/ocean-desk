@@ -130,8 +130,8 @@ checkButton?.addEventListener('click',async()=>{
     say(remaining===0?'서버 집중 시간이 끝났습니다. 완료 확인을 선택할 수 있습니다.':`서버 세션 발견 · ${recovery.planned_minutes}분 · 남은 시간 ${Math.ceil(remaining/60)}분`);
     restoreButton.textContent=remaining===0?'완료 확인':'이어하기';
     restoreButton.disabled=false;
-  }catch(e){recovery=null;say('서버 집중 상태를 확인하지 못했습니다. 로그인과 네트워크를 확인해 주세요.')}
-  finally{checkButton.disabled=false}
+  }catch(e){if(version===identityVersion){recovery=null;say('서버 집중 상태를 확인하지 못했습니다. 로그인과 네트워크를 확인해 주세요.')}}
+  finally{checkButton.disabled=!valid()}
 });
 restoreButton?.addEventListener('click',async()=>{
   if(!valid()||!recovery?.active)return;
@@ -168,6 +168,6 @@ restoreButton?.addEventListener('click',async()=>{
     say('서버 집중 기록을 복구했습니다. 같은 세션의 남은 시간을 이어갑니다.');
     $('odAccountDialog')?.close();
     recovery=null;
-  }catch(e){say('집중 기록 복구 실패. 서버 상태를 다시 확인해 주세요.')}
-  finally{restoreButton.disabled=!recovery}
+  }catch(e){if(version===identityVersion)say('집중 기록 복구 실패. 서버 상태를 다시 확인해 주세요.')}
+  finally{restoreButton.disabled=!recovery||version!==identityVersion}
 });
