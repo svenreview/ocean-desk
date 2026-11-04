@@ -5,6 +5,7 @@ on:
       - docs/ocean-rewards-schema-draft.sql
       - docs/ocean-travel-draw-rpc-draft.sql
       - docs/ocean-wallet-initialize-rpc-draft.sql
+      - docs/ocean-verified-puzzle-claim-draft.sql
       - tests/server/**
       - .github/workflows/ocean-desk-server.yml
   workflow_dispatch:
@@ -46,5 +47,7 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f docs/ocean-travel-draw-rpc-draft.sql
       - name: Apply secure wallet initialization RPC
         run: psql -X -v ON_ERROR_STOP=1 -f docs/ocean-wallet-initialize-rpc-draft.sql
+      - name: Apply verified puzzle reward grant SQL
+        run: psql -X -v ON_ERROR_STOP=1 -f docs/ocean-verified-puzzle-claim-draft.sql
       - name: Validate permissions, concurrency, idempotency and balances
         run: python tests/server/test_travel_draw.py
