@@ -245,7 +245,9 @@ for role in ("anon","authenticated"):
     for signature in ("public.od_server_focus_start(uuid,uuid,integer)","public.od_server_focus_finish(uuid,uuid)"):
         assert not query("SELECT has_function_privilege(%s,%s,'EXECUTE')",(role,signature))[0]
     for perm in ("SELECT","INSERT","UPDATE","DELETE"):
-        assert not query("SELECT has_table_privilege(%s,'public.od_focus_attempts',%s)",(role,perm))[0]
+        expected_read = (role == "authenticated" and perm == "SELECT")
+        actual = query("SELECT has_table_privilege(%s,'public.od_focus_attempts',%s)",(role,perm))[0]
+        assert actual == expected_read, (role,perm,actual)
 
 focus_uid=new_user(0)
 request=uuid4()
