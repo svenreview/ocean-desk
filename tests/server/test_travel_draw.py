@@ -337,3 +337,14 @@ assert query("SELECT count(*) FROM public.od_verified_focus WHERE session_id=%s"
 fresh=focus_start(cancel_user,uuid4(),25)
 assert fresh["status"]=="active" and fresh["session_id"]!=cancel_start["session_id"]
 print("PASS focus cancel: cross-user denied, idempotent, no receipt, fresh restart")
+
+# Account-history RLS: users can view only their own server focus sessions.
+with psycopg.connect(DSN) as conn:
+    conn.execute("INSERT INTO auth.users(id) VALUES (%s)",(uuid4(),))
+for acting_uid in (focus_uid, fifty_user):
+    rows=visible_rows("SELECT user_id, id FROM public.od_focus_attempts",acting_uid)
+    assert rows and all(r[0]==acting_uid for r in rows), rows
+assert not query("SELECT has_table_privilege('anon','public.od_focus_attempts','SELECT')")[0]
+assert query("SELECT has_table_privilege('authenticated','public.od_focus_attempts','SELECT')")[0]
+assert not query("SELECT has_table_privilege('authenticated','public.od_focus_attempts','UPDATE')")[0]
+print("PASS account focus history isolation and read-only access")
