@@ -232,3 +232,80 @@ assert sorted(x["replayed"] for x in claimed)==[False,True]
 assert pieces(parallel_uid)==1
 
 print("PASS verified reward gating, ACL, replay, cross-user, rollover and concurrency")
+
+
+# Server focus clock tests: requests cannot claim an early completion.
+def focus_start(uid,request,minutes):
+    return query("SELECT public.od_server_focus_start(%s,%s,%s)",(uid,request,minutes),role="service_role")[0]
+
+def focus_finish(uid,session):
+    return query("SELECT public.od_server_focus_finish(%s,%s)",(uid,session),role="service_role")[0]
+
+for role in ("anon","authenticated"):
+    for signature in ("public.od_server_focus_start(uuid,uuid,integer)","public.od_server_focus_finish(uuid,uuid)"):
+        assert not query("SELECT has_function_privilege(%s,%s,'EXECUTE')",(role,signature))[0]
+    for perm in ("SELECT","INSERT","UPDATE","DELETE"):
+        assert not query("SELECT has_table_privilege(%s,'public.od_focus_attempts',%s)",(role,perm))[0]
+
+focus_uid=new_user(0)
+request=uuid4()
+s25=focus_start(focus_uid,request,25)
+assert s25["status"]=="active" and s25["planned_minutes"]==25 and not s25["replayed"]
+assert focus_start(focus_uid,request,25)["replayed"] is True
+try:
+    focus_start(focus_uid,request,50)
+    raise AssertionError("request UUID must not change minutes")
+except psycopg.Error as exc:
+    assert "focus_request_id_mismatch" in str(exc)
+try:
+    focus_start(focus_uid,uuid4(),50)
+    raise AssertionError("one concurrent active focus per user")
+except psycopg.Error as exc:
+    assert "focus_already_active" in str(exc)
+try:
+    focus_finish(focus_uid,s25["session_id"])
+    raise AssertionError("early finish must fail")
+except psycopg.Error as exc:
+    assert "focus_too_early" in str(exc)
+assert query("SELECT count(*) FROM public.od_verified_focus WHERE user_id=%s",(focus_uid,))[0]==0
+try:
+    focus_finish(new_user(0),s25["session_id"])
+    raise AssertionError("other users must not finish someone's focus")
+except psycopg.Error as exc:
+    assert "focus_session_not_found" in str(exc)
+with psycopg.connect(DSN) as conn:
+    # Advance DB clock only in disposable test, never through a public API.
+    conn.execute("UPDATE public.od_focus_attempts SET started_at=clock_timestamp()-interval '25 minutes 2 seconds' WHERE id=%s",(s25["session_id"],))
+finished=focus_finish(focus_uid,s25["session_id"])
+assert finished["verified"] is True and finished["status"]=="completed" and not finished["replayed"]
+assert focus_finish(focus_uid,s25["session_id"])["replayed"] is True
+assert query("SELECT count(*) FROM public.od_verified_focus WHERE user_id=%s",(focus_uid,))[0]==1
+assert pieces(focus_uid)==0, "focus completion alone must not grant a puzzle"
+
+# Expired focus never produces a trusted receipt.
+old=focus_start(focus_uid,uuid4(),50)
+with psycopg.connect(DSN) as conn:
+    conn.execute("UPDATE public.od_focus_attempts SET started_at=clock_timestamp()-interval '2 hours 5 minutes' WHERE id=%s",(old["session_id"],))
+expired=focus_finish(focus_uid,old["session_id"])
+assert expired["verified"] is False and expired["status"]=="expired"
+assert query("SELECT count(*) FROM public.od_verified_focus WHERE session_id=%s",(old["session_id"],))[0]==0
+
+# Same user cannot start two active sessions even if two requests are concurrent.
+focus_parallel=new_user(0)
+def try_start(_):
+    try:
+        return ("ok",focus_start(focus_parallel,uuid4(),25))
+    except psycopg.Error as exc:
+        return ("error",str(exc).splitlines()[0])
+with ThreadPoolExecutor(max_workers=2) as pool:
+    starts=list(pool.map(try_start,range(2)))
+assert sum(result[0]=="ok" for result in starts)==1, starts
+
+# 50 min example: server confirms once its own elapsed clock passes.
+fifty_user=new_user(0)
+fifty=focus_start(fifty_user,uuid4(),50)
+with psycopg.connect(DSN) as conn:
+    conn.execute("UPDATE public.od_focus_attempts SET started_at=clock_timestamp()-interval '50 minutes 3 seconds' WHERE id=%s",(fifty["session_id"],))
+assert focus_finish(fifty_user,fifty["session_id"])["verified"] is True
+assert query("SELECT count(*) FROM public.od_verified_focus WHERE user_id=%s",(fifty_user,))[0]==1
+print("PASS focus: server-time only, early block, 25/50, one-active, foreign user, replay and expiry")
