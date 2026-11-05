@@ -431,10 +431,10 @@ legacy_constraints={
     }
 }
 for table, expected in legacy_constraints.items():
-    found={row[0] for row in query(
-        "SELECT array_agg(conname)::text[] FROM pg_constraint WHERE conrelid=%s::regclass",
+    found=set(query(
+        "SELECT array_agg(conname) FROM pg_constraint WHERE conrelid=%s::regclass",
         ("public."+table,)
-    )[0] or []}
+    )[0] or [])
     assert expected.issubset(found), (table,sorted(expected-found))
 for name in ("focus_sessions_user_started_idx","personal_focus_sessions_user_started_idx"):
     assert query("SELECT count(*) FROM pg_indexes WHERE schemaname='public' AND indexname=%s",(name,))[0]==1,name
