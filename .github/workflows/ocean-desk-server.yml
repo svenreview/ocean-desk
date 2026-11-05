@@ -65,3 +65,13 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f docs/ocean-server-focus-status-draft.sql
       - name: Validate permissions, concurrency, idempotency and balances
         run: python tests/server/test_travel_draw.py
+      - name: Snapshot all tables and RPC grants before emergency stop
+        run: python tests/server/test_feature_gate.py before
+      - name: Simulate stopping reward and focus endpoints in disposable DB
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/server/feature-gate-stop.sql
+      - name: Validate halted RPC access and intact existing data and RLS
+        run: python tests/server/test_feature_gate.py stopped
+      - name: Simulate restoring endpoint privileges in disposable DB
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/server/feature-gate-resume.sql
+      - name: Verify restored access and unchanged records
+        run: python tests/server/test_feature_gate.py resumed
