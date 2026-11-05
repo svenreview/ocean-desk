@@ -378,3 +378,30 @@ with psycopg.connect(DSN) as conn:
 assert focus_status(status_uid)["expired"] is True
 assert query("SELECT count(*) FROM public.od_verified_focus WHERE session_id=%s",(stale["session_id"],))[0]==0
 print("PASS recovery: own active session, server remaining time, ready, completed and stale")
+
+# Compatibility: all representative legacy Ocean Desk tables and rows survive.
+# This runs only against the isolated PostgreSQL fixture, never against production.
+legacy_expected={
+    "rooms":("legacy-room-1",),
+    "seats":("legacy-seat-1",),
+    "room_instances":("11111111-1111-4111-8111-111111111111",),
+    "instance_seats":("22222222-2222-4222-8222-222222222222",),
+    "focus_sessions":("44444444-4444-4444-8444-444444444444",),
+    "personal_focus_sessions":("55555555-5555-4555-8555-555555555555",),
+}
+for table, (expected_id,) in legacy_expected.items():
+    actual=query(
+        "SELECT id::text FROM public." + table + " LIMIT 1"
+    )
+    assert actual is not None and actual[0] == expected_id, (table,actual)
+    rls=query(
+        "SELECT relrowsecurity FROM pg_class WHERE oid=%s::regclass",
+        ("public."+table,)
+    )[0]
+    assert rls, "legacy RLS was disabled: "+table
+assert query("SELECT capacity FROM public.rooms WHERE id='legacy-room-1'")[0] == 8
+assert query("SELECT planned_minutes FROM public.focus_sessions WHERE id='44444444-4444-4444-8444-444444444444'")[0] == 25
+assert query("SELECT planned_minutes FROM public.personal_focus_sessions WHERE id='55555555-5555-4555-8555-555555555555'")[0] == 50
+for table in ("rooms","seats","room_instances","instance_seats","focus_sessions","personal_focus_sessions"):
+    assert query("SELECT count(*) FROM pg_policies WHERE schemaname='public' AND tablename=%s",(table,))[0] >= 1
+print("PASS existing Ocean Desk catalog/seats/focus data retained, RLS and policies remain enabled")
