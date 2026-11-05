@@ -405,3 +405,40 @@ assert query("SELECT planned_minutes FROM public.personal_focus_sessions WHERE i
 for table in ("rooms","seats","room_instances","instance_seats","focus_sessions","personal_focus_sessions"):
     assert query("SELECT count(*) FROM pg_policies WHERE schemaname='public' AND tablename=%s",(table,))[0] >= 1
 print("PASS existing Ocean Desk catalog/seats/focus data retained, RLS and policies remain enabled")
+
+# 40th pass: a schema fingerprint based on READ-ONLY production catalog metadata.
+# Reject tests that accidentally drop real-world uniqueness/constraints/index coverage.
+legacy_constraints={
+    "rooms": {"rooms_kind_check","rooms_capacity_check","rooms_pkey"},
+    "seats": {"seats_seat_number_check","seats_room_id_seat_number_key","seats_pkey"},
+    "room_instances": {
+        "room_instances_capacity_check","room_instances_instance_no_check",
+        "room_instances_id_template_room_id_key",
+        "room_instances_template_room_id_instance_no_key","room_instances_pkey"
+    },
+    "instance_seats": {
+        "instance_seats_seat_number_check",
+        "instance_seats_room_instance_id_seat_number_key","instance_seats_pkey"
+    },
+    "focus_sessions": {
+        "focus_sessions_check","focus_sessions_planned_minutes_check",
+        "focus_sessions_room_id_fkey","focus_sessions_user_id_fkey",
+        "focus_sessions_pkey"
+    },
+    "personal_focus_sessions": {
+        "personal_focus_sessions_check","personal_focus_sessions_planned_minutes_check",
+        "personal_focus_sessions_user_id_fkey","personal_focus_sessions_pkey"
+    }
+}
+for table, expected in legacy_constraints.items():
+    found={row[0] for row in query(
+        "SELECT array_agg(conname)::text[] FROM pg_constraint WHERE conrelid=%s::regclass",
+        ("public."+table,)
+    )[0] or []}
+    assert expected.issubset(found), (table,sorted(expected-found))
+for name in ("focus_sessions_user_started_idx","personal_focus_sessions_user_started_idx"):
+    assert query("SELECT count(*) FROM pg_indexes WHERE schemaname='public' AND indexname=%s",(name,))[0]==1,name
+for table in legacy_constraints:
+    assert query("SELECT count(*) FROM information_schema.triggers WHERE trigger_schema='public' AND event_object_table=%s",(table,))[0]==0
+assert query("SELECT kind FROM public.rooms WHERE id='legacy-room-1'")[0]=="study"
+print("PASS production-observed legacy constraints/indexes, empty trigger set and room kind")
