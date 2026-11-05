@@ -45,6 +45,8 @@ jobs:
         run: python -m pip install 'psycopg[binary]==3.2.4'
       - name: Setup Supabase role and auth shim in disposable DB
         run: psql -X -v ON_ERROR_STOP=1 -f tests/server/bootstrap.sql
+      - name: Build representative legacy schema in disposable DB
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/server/legacy_schema_fixture.sql
       - name: Apply rewards schema draft to disposable DB
         run: psql -X -v ON_ERROR_STOP=1 -f docs/ocean-rewards-schema-draft.sql
       - name: Apply atomic travel draw RPC draft to disposable DB
