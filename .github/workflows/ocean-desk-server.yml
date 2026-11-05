@@ -1,0 +1,77 @@
+name: Ocean Desk server reward transaction checks
+on:
+  pull_request:
+    paths:
+      - docs/ocean-rewards-schema-draft.sql
+      - docs/ocean-travel-draw-rpc-draft.sql
+      - docs/ocean-wallet-initialize-rpc-draft.sql
+      - docs/ocean-verified-puzzle-claim-draft.sql
+      - docs/ocean-server-focus-session-draft.sql
+      - docs/ocean-server-focus-cancel-draft.sql
+      - docs/ocean-server-focus-status-draft.sql
+      - docs/ocean-focus-history-rls-draft.sql
+      - tests/server/**
+      - .github/workflows/ocean-desk-server.yml
+  workflow_dispatch:
+jobs:
+  postgres-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ocean_desk_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ocean_desk_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: ocean_desk_test
+      OD_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/ocean_desk_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install integration test dependency
+        run: python -m pip install 'psycopg[binary]==3.2.4'
+      - name: Setup Supabase role and auth shim in disposable DB
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/server/bootstrap.sql
+      - name: Build representative legacy schema in disposable DB
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/server/legacy_schema_fixture.sql
+      - name: Apply rewards schema draft to disposable DB
+        run: psql -X -v ON_ERROR_STOP=1 -f docs/ocean-rewards-schema-draft.sql
+      - name: Apply atomic travel draw RPC draft to disposable DB
+        run: psql -X -v ON_ERROR_STOP=1 -f docs/ocean-travel-draw-rpc-draft.sql
+      - name: Apply secure wallet initialization RPC
+        run: psql -X -v ON_ERROR_STOP=1 -f docs/ocean-wallet-initialize-rpc-draft.sql
+      - name: Apply verified puzzle reward grant SQL
+        run: psql -X -v ON_ERROR_STOP=1 -f docs/ocean-verified-puzzle-claim-draft.sql
+      - name: Apply server-clock focus session SQL
+        run: psql -X -v ON_ERROR_STOP=1 -f docs/ocean-server-focus-session-draft.sql
+      - name: Apply server focus cancel SQL
+        run: psql -X -v ON_ERROR_STOP=1 -f docs/ocean-server-focus-cancel-draft.sql
+      - name: Apply account focus history RLS
+        run: psql -X -v ON_ERROR_STOP=1 -f docs/ocean-focus-history-rls-draft.sql
+      - name: Apply server focus recovery status SQL
+        run: psql -X -v ON_ERROR_STOP=1 -f docs/ocean-server-focus-status-draft.sql
+      - name: Validate permissions, concurrency, idempotency and balances
+        run: python tests/server/test_travel_draw.py
+      - name: Snapshot all tables and RPC grants before emergency stop
+        run: python tests/server/test_feature_gate.py before
+      - name: Simulate stopping reward and focus endpoints in disposable DB
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/server/feature-gate-stop.sql
+      - name: Validate halted RPC access and intact existing data and RLS
+        run: python tests/server/test_feature_gate.py stopped
+      - name: Simulate restoring endpoint privileges in disposable DB
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/server/feature-gate-resume.sql
+      - name: Verify restored access and unchanged records
+        run: python tests/server/test_feature_gate.py resumed

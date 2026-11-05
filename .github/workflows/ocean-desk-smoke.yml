@@ -1,0 +1,55 @@
+name: Ocean Desk MVP browser checks
+on:
+  pull_request:
+    paths:
+      - index.html
+      - od-account.js
+      - od-auth-flow.mjs
+      - od-config-validator.mjs
+      - od-runtime-config.js
+      - od-scenery.js
+      - scripts/ocean-staging-preflight.mjs
+      - scripts/ocean-preview-readiness.mjs
+      - scripts/ocean-preview-bundle.mjs
+      - ocean-local-server.py
+      - od-focus-sync.js
+      - od-wallet-bootstrap.mjs
+      - tests/**
+      - .github/workflows/ocean-desk-smoke.yml
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test runner
+        run: |
+          npm install --no-save @playwright/test
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/ocean-desk-server.log 2>&1 &
+      - name: Verify local preview is safe to run (never deploy)
+        run: node scripts/ocean-preview-readiness.mjs
+      - name: Run auth and wallet helper unit tests
+        run: node --test tests/wallet-bootstrap.test.mjs tests/auth-flow.test.mjs tests/config-validator.test.mjs tests/staging-preflight.test.mjs tests/preview-readiness.test.mjs tests/preview-bundle.test.mjs
+      - name: Run Chromium smoke tests
+        run: npx playwright test tests/ocean-desk.spec.mjs tests/auth-account.spec.mjs --browser=chromium --workers=1 --reporter=line
+      - name: Validate local mobile preview launcher Python syntax
+        run: python3 -B -c "import ast, pathlib; ast.parse(pathlib.Path('ocean-local-server.py').read_text(encoding='utf-8'))"
+      - name: Package free offline Preview files without deploying
+        run: |
+          node scripts/ocean-preview-bundle.mjs preview-package
+          cd preview-package
+          zip -q -r ../ocean-desk-local-preview.zip .
+      - name: Upload local demo archive (not a Vercel deployment)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ocean-desk-local-preview
+          path: ocean-desk-local-preview.zip
+          retention-days: 7
+          if-no-files-found: error
