@@ -27,6 +27,29 @@ create table public.personal_focus_sessions (
  id uuid primary key, user_id uuid not null references auth.users(id),
  started_at timestamptz not null, finished_at timestamptz, planned_minutes integer
 );
+-- Constraints and indexes mirrored from actual public metadata, read-only inspected on 2026-11-05.
+alter table public.rooms
+ add constraint rooms_kind_check check (kind in ('cafe','study')),
+ add constraint rooms_capacity_check check (capacity between 1 and 100);
+alter table public.seats
+ add constraint seats_seat_number_check check (seat_number > 0),
+ add constraint seats_room_id_seat_number_key unique(room_id,seat_number);
+alter table public.room_instances
+ add constraint room_instances_capacity_check check (capacity between 1 and 100),
+ add constraint room_instances_instance_no_check check (instance_no > 0),
+ add constraint room_instances_id_template_room_id_key unique(id,template_room_id),
+ add constraint room_instances_template_room_id_instance_no_key unique(template_room_id,instance_no);
+alter table public.instance_seats
+ add constraint instance_seats_seat_number_check check (seat_number > 0),
+ add constraint instance_seats_room_instance_id_seat_number_key unique(room_instance_id,seat_number);
+alter table public.focus_sessions
+ add constraint focus_sessions_check check (finished_at is null or finished_at >= started_at),
+ add constraint focus_sessions_planned_minutes_check check (planned_minutes between 1 and 240);
+alter table public.personal_focus_sessions
+ add constraint personal_focus_sessions_check check (finished_at is null or finished_at >= started_at),
+ add constraint personal_focus_sessions_planned_minutes_check check (planned_minutes between 1 and 240);
+create index focus_sessions_user_started_idx on public.focus_sessions(user_id,started_at desc);
+create index personal_focus_sessions_user_started_idx on public.personal_focus_sessions(user_id,started_at desc);
 alter table public.rooms enable row level security;
 alter table public.seats enable row level security;
 alter table public.room_instances enable row level security;
@@ -40,7 +63,7 @@ create policy "public read instance seats" on public.instance_seats for select t
  using (exists (select 1 from public.room_instances ri where ri.id = room_instance_id and ri.is_open));
 create policy "read own focus sessions" on public.focus_sessions for select to authenticated using (auth.uid()=user_id);
 create policy "read own personal sessions" on public.personal_focus_sessions for select to authenticated using (auth.uid()=user_id);
-insert into public.rooms(id,name,kind,capacity) values('legacy-room-1','Legacy room','focus',8);
+insert into public.rooms(id,name,kind,capacity) values('legacy-room-1','Legacy room','study',8);
 insert into public.seats(id,room_id,seat_number,x,y) values('legacy-seat-1','legacy-room-1',1,0.3,0.5);
 insert into public.room_instances(id,template_room_id,instance_no,name,capacity,is_open)
  values('11111111-1111-4111-8111-111111111111','legacy-room-1',1,'Legacy room instance',8,true);
